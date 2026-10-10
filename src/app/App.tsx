@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AppShell } from '../components/AppShell/AppShell';
 import { Button } from '../components/Button/Button';
-import { Card } from '../components/Card/Card';
 import { ThemeSelector } from '../components/ThemeSelector/ThemeSelector';
 import { useAppSettings } from '../hooks/useAppSettings';
 import { useTheme } from '../hooks/useTheme';
@@ -69,13 +68,6 @@ export function App() {
       ) : (
         <ClientHome />
       )}
-      <Card tone="quiet">
-        <h2>Fase 3 in corso</h2>
-        <p>
-          La scelta della modalita e il tema sono ora sincronizzati con IndexedDB. Il prossimo passo
-          sara completare clienti, esercizi personalizzati e prime schede salvate nello stesso database.
-        </p>
-      </Card>
     </AppShell>
   );
 }
