@@ -44,6 +44,18 @@ npm run dev
 npm run build
 ```
 
+## Password area Personal Trainer
+
+L'accesso all'area Personal Trainer richiede una password configurata dal proprietario dell'app.
+
+La password non viene salvata in chiaro: l'app usa un hash SHA-256 configurato tramite variabile:
+
+```bash
+VITE_TRAINER_PASSWORD_HASH=hash_sha256_della_password
+```
+
+Per lo sviluppo locale crea un file `.env.local` copiando `.env.example` e inserendo l'hash.
+
 ## Pubblicazione GitHub Pages
 
 1. Crea un repository GitHub, per esempio `fitness-app`.

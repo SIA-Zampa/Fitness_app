@@ -3,6 +3,7 @@ import { AppShell } from '../components/AppShell/AppShell';
 import { Button } from '../components/Button/Button';
 import { TrainerAccessGate } from '../components/TrainerAccessGate/TrainerAccessGate';
 import { ThemeSelector } from '../components/ThemeSelector/ThemeSelector';
+import { configuredTrainerPasswordHash } from '../config/security';
 import { useAppSettings } from '../hooks/useAppSettings';
 import { useTheme } from '../hooks/useTheme';
 import { ClientHome } from '../pages/Client/ClientHome';
@@ -58,8 +59,7 @@ export function App() {
         }
       >
         <TrainerAccessGate
-          passwordHash={appSettings.settings.trainerPasswordHash}
-          onPasswordCreated={appSettings.setTrainerPasswordHash}
+          passwordHash={configuredTrainerPasswordHash}
           onUnlocked={() => setIsTrainerUnlocked(true)}
         />
       </AppShell>
@@ -94,11 +94,6 @@ export function App() {
           onChangeRole={() => {
             setIsTrainerUnlocked(false);
             void appSettings.setRole(undefined);
-          }}
-          hasTrainerPassword={Boolean(appSettings.settings.trainerPasswordHash)}
-          onResetTrainerPassword={() => {
-            setIsTrainerUnlocked(false);
-            void appSettings.setTrainerPasswordHash(undefined);
           }}
         />
       ) : role === 'trainer' ? (
