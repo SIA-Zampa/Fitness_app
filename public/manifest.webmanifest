@@ -1,0 +1,19 @@
+{
+  "name": "Fitness App",
+  "short_name": "Fitness",
+  "description": "Schede di allenamento offline-first per personal trainer e clienti.",
+  "theme_color": "#f7f8f5",
+  "background_color": "#f7f8f5",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

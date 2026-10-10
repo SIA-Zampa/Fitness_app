@@ -1,0 +1,1171 @@
+
+# PROGETTO FITNESS APP
+## Documento di specifiche funzionali e tecniche per lo sviluppo con Codex
+
+**Versione specifiche:** 1.0  
+**Tipologia:** Progressive Web Application (PWA)  
+**Destinazione:** Smartphone Android e iPhone  
+**Finalità:** Progetto hobbistico per la gestione delle schede di allenamento tra personal trainer e clienti.
+
+---
+
+# 1. OBIETTIVO DEL PROGETTO
+
+Voglio sviluppare un'applicazione dedicata alla gestione delle schede di allenamento in palestra.
+
+L'applicazione dovrà essere utilizzabile sia dai personal trainer sia dai rispettivi clienti.
+
+Il personal trainer dovrà poter creare, modificare, salvare ed esportare schede di allenamento personalizzate.
+
+Il cliente dovrà poter importare la scheda ricevuta dal personal trainer, visualizzarla sul proprio smartphone e utilizzarla durante gli allenamenti.
+
+L'obiettivo è ottenere un'applicazione:
+
+- Compatibile con Android e iOS.
+- Installabile sulla schermata Home dello smartphone.
+- Utilizzabile offline dopo la prima installazione.
+- Senza necessità di account online.
+- Senza username e password.
+- Senza server applicativi dedicati.
+- Senza database centralizzati.
+- Senza costi obbligatori di pubblicazione su Play Store o App Store.
+- Con database locale su ogni dispositivo.
+- Con trasferimento delle schede tramite file.
+- Con un'interfaccia moderna, semplice e intuitiva.
+
+L'applicazione dovrà essere progettata per poter essere ampliata successivamente senza dover riscrivere l'intero progetto.
+
+---
+
+# 2. DECISIONE ARCHITETTURALE PRINCIPALE
+
+## Un'unica PWA con due modalità operative
+
+Inizialmente era stata valutata la possibilità di sviluppare due APK Android distinti.
+
+Questa soluzione è stata scartata perché sia i personal trainer sia i clienti potrebbero utilizzare indifferentemente dispositivi Android oppure iPhone.
+
+È stata quindi scelta una **Progressive Web Application (PWA) unica**, con due modalità:
+
+1. Personal Trainer
+2. Cliente
+
+La PWA dovrà funzionare sui browser moderni Android e iOS e potrà essere aggiunta alla schermata Home.
+
+Non devono essere sviluppate due applicazioni separate.
+
+La scelta della modalità determinerà le funzionalità e le schermate disponibili.
+
+---
+
+# 3. TECNOLOGIE DA UTILIZZARE
+
+## Stack tecnologico previsto
+
+| Componente | Tecnologia |
+|---|---|
+| Linguaggio principale | TypeScript |
+| Framework frontend | React |
+| Ambiente di sviluppo/build | Vite |
+| Database locale | IndexedDB |
+| Libreria database | Dexie.js |
+| Supporto PWA | vite-plugin-pwa |
+| Interfaccia | HTML5 + CSS |
+| Esportazione/importazione | JSON |
+| Hosting | Hosting statico HTTPS |
+| Backend | Non previsto |
+| Database remoto | Non previsto |
+
+Per la gestione dell'interfaccia si possono utilizzare librerie leggere, purché non introducano complessità inutili.
+
+È possibile valutare Tailwind CSS per la parte grafica.
+
+## Ambiente di sviluppo disponibile
+
+Sul computer Windows sono già installati:
+
+- WAMP
+- DBeaver
+- Python
+
+Verificare la disponibilità di:
+
+- Visual Studio Code
+- Node.js LTS
+- npm
+- Google Chrome
+
+WAMP e DBeaver non sono necessari per il funzionamento dell'applicazione.
+
+Non utilizzare MySQL o altri database server.
+
+Il database dovrà essere locale sul dispositivo dell'utente.
+
+---
+
+# 4. PRIMO AVVIO DELL'APPLICAZIONE
+
+Al primo avvio, l'applicazione dovrà mostrare una schermata di benvenuto.
+
+Titolo indicativo:
+
+**Benvenuto in Fitness App**
+
+Testo:
+
+**Come vuoi utilizzare l'applicazione?**
+
+Due pulsanti:
+
+**SONO UN PERSONAL TRAINER**
+
+**SONO UN CLIENTE**
+
+L'utente selezionerà una delle due modalità.
+
+La scelta dovrà essere salvata localmente.
+
+Ai successivi avvii l'applicazione dovrà aprire direttamente la modalità precedentemente selezionata.
+
+Non dovrà essere richiesto nuovamente di scegliere il ruolo.
+
+## Cambio modalità
+
+Nella sezione Impostazioni dovrà essere disponibile un'opzione:
+
+**Cambia modalità**
+
+L'utente potrà passare da Personal Trainer a Cliente e viceversa.
+
+Il cambio modalità non dovrà cancellare automaticamente i dati precedentemente salvati.
+
+La selezione del ruolo è una preferenza locale, non un sistema di autenticazione o autorizzazione.
+
+Non sono previste password o registrazioni.
+
+---
+
+# 5. TEMA GRAFICO
+
+L'applicazione dovrà supportare tre modalità grafiche.
+
+### Tema chiaro
+- Sfondo chiaro.
+- Testi scuri.
+- Interfaccia pulita.
+- Colori di accento moderni.
+
+### Tema scuro
+- Sfondo scuro.
+- Testi chiari.
+- Contrasto adeguato.
+- Interfaccia moderna.
+
+### Tema automatico
+- Il tema segue le impostazioni del sistema operativo.
+
+## Requisiti
+
+La scelta del tema dovrà essere salvata localmente.
+
+Il tema selezionato dovrà rimanere attivo ai successivi accessi.
+
+Il tema automatico dovrà reagire anche a eventuali modifiche delle impostazioni del dispositivo.
+
+L'interfaccia dovrà essere responsive e progettata principalmente per smartphone.
+
+Preferire pulsanti grandi, testi leggibili e navigazione semplice.
+
+---
+
+# 6. MODALITÀ PERSONAL TRAINER
+
+La modalità Personal Trainer costituisce il pannello di gestione dell'applicazione.
+
+## 6.1 Dashboard
+
+La schermata principale dovrà consentire di accedere a:
+
+- Gestione clienti.
+- Creazione schede.
+- Archivio schede.
+- Libreria esercizi.
+- Esportazione schede.
+- Impostazioni.
+
+La dashboard dovrà essere semplice e adatta all'utilizzo da smartphone.
+
+## 6.2 Gestione clienti
+
+Il personal trainer dovrà poter:
+
+- Creare un cliente.
+- Modificare i dati di un cliente.
+- Visualizzare l'elenco clienti.
+- Associare una o più schede a un cliente.
+- Visualizzare le schede associate.
+- Archiviare un cliente.
+- Eliminare un cliente, previa conferma.
+
+Per la prima versione utilizzare soltanto i dati essenziali.
+
+Esempio:
+
+- ID univoco cliente.
+- Nome visualizzato.
+- Eventuali note.
+- Data creazione.
+
+Non raccogliere dati personali non necessari.
+
+Ogni cliente dovrà avere un identificativo univoco interno, indipendente dal nome.
+
+## 6.3 Creazione schede di allenamento
+
+Il personal trainer dovrà poter creare una scheda personalizzata.
+
+Ogni scheda potrà contenere:
+
+- Identificativo univoco.
+- Nome scheda.
+- Cliente associato.
+- Descrizione.
+- Data creazione.
+- Data ultima modifica.
+- Versione.
+- Giorni di allenamento.
+- Esercizi associati a ciascun giorno.
+
+Esempio:
+
+**Scheda: Ipertrofia — Marco**
+
+Giorno 1:
+- Petto
+- Tricipiti
+
+Giorno 2:
+- Dorso
+- Bicipiti
+
+Giorno 3:
+- Gambe
+- Spalle
+
+Il numero di giorni dovrà essere configurabile.
+
+Non imporre necessariamente una settimana standard.
+
+## 6.4 Configurazione esercizi
+
+Per ogni esercizio il personal trainer dovrà poter specificare:
+
+- Gruppo muscolare.
+- Nome esercizio.
+- Numero di serie.
+- Numero di ripetizioni.
+- Recupero in secondi.
+- Eventuali note.
+- Ordine di esecuzione.
+
+Il sistema dovrà consentire di aggiungere, modificare, eliminare e riordinare gli esercizi.
+
+Valutare successivamente il supporto a:
+
+- Ripetizioni variabili.
+- Range di ripetizioni.
+- Superset.
+- Circuiti.
+- Tempo di esecuzione.
+- Serie a cedimento.
+- RPE/RIR.
+
+Queste funzionalità avanzate non sono obbligatorie per il primo prototipo.
+
+## 6.5 Libreria esercizi
+
+L'applicazione dovrà contenere una libreria iniziale di esercizi organizzati per gruppo muscolare.
+
+Esempi di gruppi:
+
+- Petto.
+- Dorso.
+- Spalle.
+- Bicipiti.
+- Tricipiti.
+- Quadricipiti.
+- Femorali.
+- Glutei.
+- Polpacci.
+- Addominali.
+- Cardio.
+
+Il personal trainer dovrà poter filtrare gli esercizi per gruppo muscolare.
+
+Dopo aver selezionato il gruppo, dovrà visualizzare soltanto gli esercizi appartenenti a quel gruppo.
+
+**È importante che il filtro gruppo muscolare → esercizi funzioni correttamente.**
+
+La libreria dovrà consentire anche:
+
+- Ricerca per nome.
+- Creazione di esercizi personalizzati.
+- Modifica degli esercizi personalizzati.
+- Eventuali note descrittive.
+
+Gli esercizi personalizzati dovranno essere esportabili insieme alla scheda.
+
+## 6.6 Archivio schede
+
+Il personal trainer dovrà poter:
+
+- Visualizzare le schede salvate.
+- Aprire una scheda.
+- Modificarla.
+- Duplicarla.
+- Eliminarla.
+- Esportarla.
+- Consultarne la versione.
+
+Le schede dovranno essere salvate nel database locale.
+
+---
+
+# 7. ESPORTAZIONE DELLE SCHEDE
+
+Il personal trainer dovrà poter esportare una scheda in un file.
+
+Il formato iniziale sarà JSON.
+
+Si potrà utilizzare un'estensione personalizzata, ad esempio:
+
+`.fitscheda`
+
+L'estensione personalizzata è facoltativa, ma potrebbe rendere più riconoscibili i file.
+
+Il contenuto rimarrà JSON.
+
+Esempio:
+
+`scheda_marco_v1.fitscheda`
+
+Il file dovrà contenere tutti i dati necessari affinché l'app Cliente possa ricostruire la scheda.
+
+Dovrà includere:
+
+- Versione del formato.
+- ID scheda.
+- Versione scheda.
+- Nome scheda.
+- Nome visualizzato del cliente.
+- Giorni di allenamento.
+- Esercizi.
+- Parametri degli esercizi.
+- Note.
+- Definizioni degli eventuali esercizi personalizzati.
+
+L'esportazione non dovrà includere dati personali non necessari.
+
+## Condivisione
+
+Il personal trainer dovrà poter:
+
+- Scaricare il file.
+- Salvarlo sul dispositivo.
+- Condividerlo tramite gli strumenti disponibili sul telefono.
+
+Valutare l'utilizzo della Web Share API, con fallback al download del file.
+
+La condivisione dovrà essere compatibile, per quanto consentito dai browser, con Android e iOS.
+
+Non assumere che WhatsApp o qualsiasi altra applicazione sia sempre disponibile.
+
+---
+
+# 8. MODALITÀ CLIENTE
+
+La modalità Cliente dovrà essere estremamente semplice.
+
+Non sono previsti account, registrazioni o password.
+
+## 8.1 Prima apertura
+
+Se il cliente non ha ancora importato una scheda, mostrare:
+
+**Benvenuto!**
+
+**Importa la scheda ricevuta dal tuo personal trainer per iniziare.**
+
+Pulsante:
+
+**IMPORTA SCHEDA**
+
+Il cliente dovrà poter selezionare un file dal proprio dispositivo.
+
+L'applicazione leggerà il file e importerà la scheda nel database locale.
+
+## 8.2 Importazione
+
+Durante l'importazione:
+
+1. Selezionare il file.
+2. Verificare che il formato sia valido.
+3. Controllare la versione del formato.
+4. Validare i dati.
+5. Verificare eventuali duplicati.
+6. Salvare la scheda nel database.
+7. Mostrare un messaggio di conferma.
+
+In caso di errore, mostrare un messaggio comprensibile.
+
+Non devono essere importati file arbitrari senza validazione.
+
+Il JSON dovrà essere trattato esclusivamente come dato e non come codice eseguibile.
+
+## 8.3 Dashboard cliente
+
+Dopo l'importazione, il cliente dovrà visualizzare:
+
+- La mia scheda.
+- Inizia allenamento.
+- Storico allenamenti.
+- I miei progressi.
+- Importa nuova scheda.
+- Impostazioni.
+
+## 8.4 Visualizzazione scheda
+
+La scheda dovrà mostrare i giorni disponibili.
+
+Esempio:
+
+**LA MIA SCHEDA**
+
+**Giorno 1 — Petto e tricipiti**
+
+**Giorno 2 — Dorso e bicipiti**
+
+**Giorno 3 — Gambe e spalle**
+
+Selezionando un giorno, il cliente visualizzerà gli esercizi previsti.
+
+Per ogni esercizio mostrare:
+
+- Nome.
+- Serie.
+- Ripetizioni.
+- Recupero.
+- Note.
+
+---
+
+# 9. ALLENAMENTO DEL CLIENTE
+
+L'applicazione dovrà prevedere la possibilità di utilizzare la scheda durante l'allenamento.
+
+Sono state considerate due modalità.
+
+## Modalità A — Scheda tradizionale
+
+Il cliente visualizza tutti gli esercizi del giorno in un'unica schermata.
+
+Può registrare direttamente:
+
+- Peso utilizzato.
+- Ripetizioni effettuate.
+- Serie completate.
+
+## Modalità B — Allenamento guidato
+
+Il cliente seleziona un giorno e preme:
+
+**INIZIA ALLENAMENTO**
+
+L'applicazione accompagna il cliente durante la sessione.
+
+Per ogni esercizio permette di:
+
+- Visualizzare i parametri assegnati.
+- Registrare il peso.
+- Registrare le ripetizioni.
+- Segnare la serie come completata.
+- Avviare un timer di recupero.
+- Passare all'esercizio successivo.
+
+**Decisione proposta:** prevedere entrambe le modalità, sviluppando inizialmente quella tradizionale.
+
+---
+
+# 10. REGISTRAZIONE DEI PROGRESSI
+
+Il cliente dovrà poter registrare i risultati effettivi dell'allenamento.
+
+Esempio:
+
+**Panca piana**
+
+Prescrizione:
+
+4 serie × 10 ripetizioni.
+
+Risultati:
+
+| Serie | Ripetizioni | Peso |
+|---|---|---|
+| 1 | 10 | 60 kg |
+| 2 | 10 | 60 kg |
+| 3 | 10 | 65 kg |
+| 4 | 8 | 65 kg |
+
+I dati dovranno essere salvati localmente.
+
+Alla sessione successiva, il cliente potrà consultare i risultati precedenti.
+
+Prevedere una struttura dati che consenta di associare ogni sessione a:
+
+- Scheda.
+- Giorno.
+- Esercizio.
+- Data e ora.
+- Serie eseguite.
+- Peso.
+- Ripetizioni.
+
+Lo storico dovrà rimanere disponibile anche dopo l'importazione di una nuova versione della scheda.
+
+In futuro potranno essere introdotti grafici di progressione.
+
+---
+
+# 11. TIMER DI RECUPERO
+
+Nella modalità Cliente prevedere un timer per il recupero.
+
+Il timer dovrà:
+
+- Utilizzare il recupero impostato dal personal trainer.
+- Consentire l'avvio manuale.
+- Consentire pausa e ripresa.
+- Consentire l'azzeramento.
+- Mostrare il tempo rimanente.
+
+Valutare un avvio automatico dopo il completamento di una serie.
+
+Considerare le limitazioni dei browser mobili, soprattutto quando l'app viene messa in background.
+
+Per evitare errori, calcolare il tempo residuo utilizzando un riferimento temporale, anziché affidarsi esclusivamente a intervalli JavaScript.
+
+Non dare per garantite notifiche o avvisi sonori in background su tutti i dispositivi.
+
+---
+
+# 12. AGGIORNAMENTO DELLE SCHEDE
+
+Il personal trainer deve poter modificare una scheda già assegnata.
+
+Esempio:
+
+**Scheda Marco — Versione 1**
+
+Dopo alcune settimane viene generata:
+
+**Scheda Marco — Versione 2**
+
+Il cliente importa il nuovo file.
+
+L'applicazione dovrà riconoscere l'ID della scheda.
+
+Se il file contiene una versione più recente, dovrà proporre un aggiornamento.
+
+Esempio di messaggio:
+
+**È disponibile una nuova versione della tua scheda. Vuoi importarla?**
+
+L'aggiornamento non dovrà cancellare lo storico degli allenamenti.
+
+Gli identificativi degli esercizi dovranno essere gestiti in modo coerente, per non confondere esercizi diversi con lo stesso nome.
+
+Prevedere una gestione dei duplicati e delle versioni precedenti.
+
+---
+
+# 13. ESPORTAZIONE DEI PROGRESSI
+
+Funzionalità prevista per una fase successiva.
+
+Il cliente potrà esportare un file contenente i risultati degli allenamenti.
+
+Esempio:
+
+`progressi_marco.json`
+
+Il file potrà essere inviato al personal trainer.
+
+La modalità Personal Trainer potrà importarlo e visualizzare i risultati.
+
+Questo sistema permetterà lo scambio bidirezionale dei dati senza server.
+
+Per evitare duplicazioni, ogni sessione di allenamento dovrà avere un identificativo univoco.
+
+---
+
+# 14. DATABASE LOCALE
+
+Utilizzare IndexedDB tramite Dexie.js.
+
+Il database dovrà essere organizzato in entità separate.
+
+Schema concettuale iniziale:
+
+### Settings
+- id
+- selectedRole
+- theme
+- eventuali preferenze
+
+### Clients
+- id
+- name
+- notes
+- createdAt
+
+### Exercises
+- id
+- name
+- muscleGroup
+- description
+- isCustom
+
+### WorkoutPlans
+- id
+- clientId
+- name
+- description
+- version
+- createdAt
+- updatedAt
+
+### WorkoutDays
+- id
+- planId
+- name
+- order
+
+### WorkoutExercises
+- id
+- workoutDayId
+- exerciseId
+- sets
+- repetitions
+- restSeconds
+- notes
+- order
+
+### WorkoutSessions
+- id
+- planId
+- workoutDayId
+- startedAt
+- completedAt
+
+### SessionSets
+- id
+- sessionId
+- workoutExerciseId
+- setNumber
+- weight
+- repetitions
+- completed
+
+Lo schema è indicativo e potrà essere migliorato durante la progettazione.
+
+Utilizzare identificativi univoci e prevedere migrazioni del database.
+
+---
+
+# 15. STRUTTURA DEL PROGETTO
+
+Organizzare il codice in moduli separati.
+
+Struttura proposta:
+
+```text
+fitness-app/
+│
+├── public/
+│   ├── icons/
+│   └── images/
+│
+├── src/
+│   │
+│   ├── app/
+│   │   ├── App.tsx
+│   │   └── routes.tsx
+│   │
+│   ├── components/
+│   │   ├── Button/
+│   │   ├── Card/
+│   │   ├── Modal/
+│   │   └── Navigation/
+│   │
+│   ├── pages/
+│   │   ├── Welcome/
+│   │   ├── Trainer/
+│   │   ├── Client/
+│   │   └── Settings/
+│   │
+│   ├── features/
+│   │   ├── clients/
+│   │   ├── exercises/
+│   │   ├── workout-plans/
+│   │   ├── workout-sessions/
+│   │   ├── import-export/
+│   │   └── progress/
+│   │
+│   ├── database/
+│   │   ├── db.ts
+│   │   └── migrations/
+│   │
+│   ├── models/
+│   │
+│   ├── services/
+│   │
+│   ├── hooks/
+│   │
+│   ├── styles/
+│   │
+│   └── main.tsx
+│
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── README.md
+```
+
+La struttura potrà essere adattata se Codex individua una soluzione più semplice e manutenibile.
+
+Evitare di concentrare tutta la logica in un unico file.
+
+---
+
+# 16. REQUISITI PWA
+
+L'applicazione dovrà includere:
+
+- Web App Manifest.
+- Icone nelle dimensioni appropriate.
+- Service worker.
+- Cache delle risorse statiche.
+- Supporto offline.
+- Layout responsive.
+- Compatibilità con Safari iOS.
+- Compatibilità con Chrome Android.
+
+Utilizzare `vite-plugin-pwa`.
+
+La PWA dovrà poter essere aggiunta alla schermata Home.
+
+## Attenzione alla gestione offline
+
+L'applicazione deve essere caricata almeno una volta con connessione Internet.
+
+Le risorse necessarie devono essere memorizzate correttamente.
+
+Successivamente le funzionalità locali dovranno essere disponibili offline.
+
+Non fare affidamento su risorse esterne indispensabili che richiedano Internet.
+
+## Aggiornamenti
+
+Prevedere un sistema di aggiornamento della PWA che non provochi la perdita dei dati locali.
+
+Evitare che un aggiornamento del service worker interrompa operazioni in corso.
+
+---
+
+# 17. DISTRIBUZIONE
+
+Non utilizzare:
+
+- Google Play Store.
+- Apple App Store.
+- Account sviluppatore a pagamento.
+- Server backend dedicati.
+
+Pubblicare la PWA tramite hosting statico HTTPS gratuito.
+
+Possibile soluzione:
+
+GitHub Pages.
+
+L'utente riceverà un collegamento all'applicazione.
+
+Su Android potrà installarla attraverso le funzionalità del browser.
+
+Su iPhone potrà aggiungerla alla schermata Home tramite Safari.
+
+Le modalità esatte di installazione dipenderanno dal sistema operativo e dal browser.
+
+Il codice applicativo sarà distribuito come risorse web statiche.
+
+I dati dei clienti non dovranno essere pubblicati nell'hosting.
+
+---
+
+# 18. BACKUP E SICUREZZA DEI DATI
+
+Questo punto è particolarmente importante.
+
+Poiché non esiste un database centralizzato, tutti i dati sono conservati localmente.
+
+La cancellazione dei dati del browser, la rimozione dell'app o determinati interventi del sistema operativo potrebbero comportare la perdita delle informazioni.
+
+Prevedere quindi:
+
+- Esportazione backup.
+- Importazione backup.
+- Conferma prima delle eliminazioni.
+- Validazione dei file importati.
+- Gestione degli errori di lettura.
+- Controllo della compatibilità delle versioni.
+
+Per i backup utilizzare un formato versionato.
+
+Non inserire credenziali o segreti nel codice frontend.
+
+Non utilizzare dati reali di clienti durante lo sviluppo.
+
+Ricordare che la scelta della modalità Personal Trainer non è una protezione di sicurezza: chiunque abbia accesso all'app potrà selezionarla.
+
+---
+
+# 19. COMPATIBILITÀ
+
+La priorità è il funzionamento su:
+
+### Android
+- Chrome.
+- PWA installata sulla schermata Home.
+
+### iPhone
+- Safari.
+- PWA aggiunta alla schermata Home.
+
+Prestare particolare attenzione a:
+
+- Importazione dei file.
+- Esportazione dei file.
+- Condivisione.
+- Persistenza dei dati.
+- Gestione della cache.
+- Funzionamento offline.
+- Timer.
+- Layout su schermi piccoli.
+- Apertura della tastiera virtuale.
+
+Non presumere che tutte le API web siano disponibili nello stesso modo sui due sistemi.
+
+Implementare fallback quando necessario.
+
+---
+
+# 20. PIANO DI SVILUPPO
+
+Non sviluppare tutte le funzionalità contemporaneamente.
+
+Procedere per fasi verificabili.
+
+## FASE 1 — Configurazione progetto
+
+Obiettivi:
+
+1. Verificare Node.js e npm.
+2. Creare il progetto React + TypeScript + Vite.
+3. Configurare la struttura delle cartelle.
+4. Configurare il sistema di navigazione.
+5. Configurare il tema grafico.
+6. Avviare il progetto in locale.
+
+Risultato atteso:
+
+Applicazione funzionante nel browser del PC.
+
+## FASE 2 — Selezione modalità
+
+Implementare:
+
+- Schermata iniziale.
+- Scelta Personal Trainer / Cliente.
+- Salvataggio della scelta.
+- Apertura automatica della modalità salvata.
+- Cambio modalità dalle impostazioni.
+
+Risultato atteso:
+
+La modalità selezionata rimane memorizzata dopo la chiusura e la riapertura.
+
+## FASE 3 — Database locale
+
+Implementare:
+
+- Dexie.
+- IndexedDB.
+- Schema iniziale.
+- Gestione delle impostazioni.
+- Gestione degli esercizi.
+- Gestione delle schede.
+
+Risultato atteso:
+
+I dati rimangono salvati dopo la chiusura dell'applicazione.
+
+## FASE 4 — Personal Trainer
+
+Implementare:
+
+- Gestione clienti.
+- Libreria esercizi.
+- Creazione schede.
+- Modifica schede.
+- Salvataggio schede.
+- Archivio schede.
+
+Risultato atteso:
+
+Il personal trainer riesce a creare una scheda completa senza scrivere codice.
+
+## FASE 5 — Esportazione e importazione
+
+Implementare:
+
+- Esportazione JSON.
+- Validazione formato.
+- Importazione schede.
+- Gestione duplicati.
+- Gestione versioni.
+- Gestione esercizi personalizzati.
+
+Risultato atteso:
+
+Una scheda creata in modalità Personal Trainer può essere esportata e importata correttamente nella modalità Cliente, anche su un dispositivo differente.
+
+## FASE 6 — Allenamento cliente
+
+Implementare:
+
+- Visualizzazione schede.
+- Selezione giorno.
+- Registrazione serie.
+- Registrazione pesi.
+- Registrazione ripetizioni.
+- Timer recupero.
+- Salvataggio sessione.
+
+Risultato atteso:
+
+Il cliente riesce a completare un allenamento e a conservarne i risultati.
+
+## FASE 7 — Storico e progressi
+
+Implementare:
+
+- Archivio allenamenti.
+- Visualizzazione risultati precedenti.
+- Storico pesi.
+- Eventuali grafici.
+
+Risultato atteso:
+
+Il cliente può confrontare le prestazioni tra sessioni differenti.
+
+## FASE 8 — PWA e distribuzione
+
+Implementare:
+
+- Manifest.
+- Icone.
+- Service worker.
+- Cache offline.
+- Build produzione.
+- Hosting statico HTTPS.
+
+Risultato atteso:
+
+Applicazione installabile e utilizzabile su Android e iPhone.
+
+## FASE 9 — Test finali
+
+Verificare:
+
+- Installazione Android.
+- Installazione iPhone.
+- Funzionamento offline.
+- Importazione file Android.
+- Importazione file iPhone.
+- Esportazione file.
+- Persistenza dei dati.
+- Aggiornamenti.
+- Cambio modalità.
+- Tema chiaro/scuro.
+- Backup e ripristino.
+
+---
+
+# 21. ISTRUZIONI OPERATIVE PER CODEX
+
+Agisci come sviluppatore software senior specializzato in React, TypeScript, Vite, IndexedDB e Progressive Web App.
+
+Il tuo compito è aiutarmi a realizzare concretamente il progetto descritto.
+
+Lavoreremo sul mio computer Windows.
+
+Voglio che tu mi supporti nella creazione, modifica, organizzazione e verifica dei file del progetto.
+
+## Regole di lavoro
+
+**1. Procedere gradualmente**
+
+Non implementare l'intero progetto in una sola volta.
+
+Suddividere lo sviluppo in fasi e completare una fase prima di passare alla successiva.
+
+**2. Analizzare l'ambiente**
+
+Prima di iniziare, verificare gli strumenti disponibili sul computer.
+
+Controllare Node.js, npm e la cartella di lavoro.
+
+Non reinstallare strumenti già presenti senza necessità.
+
+**3. Creare e modificare direttamente i file**
+
+Quando hai accesso alla cartella di progetto, crea e modifica direttamente i file necessari.
+
+Evita di chiedermi di copiare manualmente grandi quantità di codice se puoi intervenire direttamente.
+
+**4. Mantenere il progetto ordinato**
+
+Utilizzare componenti riutilizzabili.
+
+Separare:
+
+- Interfaccia.
+- Logica applicativa.
+- Database.
+- Modelli dati.
+- Importazione/esportazione.
+- Impostazioni.
+
+**5. Evitare dipendenze inutili**
+
+Preferire soluzioni semplici, stabili e facilmente manutenibili.
+
+**6. Verificare il funzionamento**
+
+Dopo modifiche significative, eseguire quando possibile:
+
+- Controllo TypeScript.
+- Build del progetto.
+- Test disponibili.
+- Verifica degli errori.
+
+Non dichiarare che una funzionalità è stata testata se non è stato effettivamente possibile verificarla.
+
+**7. Proteggere i dati**
+
+Non cancellare database, file o dati esistenti senza avvisare.
+
+Prevedere migrazioni quando cambia la struttura del database.
+
+**8. Spiegare le modifiche**
+
+Dopo ogni intervento, indicare brevemente:
+
+- File creati.
+- File modificati.
+- Funzionalità implementate.
+- Eventuali problemi.
+- Come verificare il risultato.
+
+**9. Conservare la compatibilità**
+
+Ogni modifica deve tenere conto della compatibilità Android e iPhone.
+
+**10. Non introdurre server non richiesti**
+
+L'architettura deve rimanere completamente client-side.
+
+Non introdurre backend, servizi cloud, account online o database remoti senza discuterne prima.
+
+---
+
+# 22. PRIMA ATTIVITÀ RICHIESTA A CODEX
+
+Voglio iniziare dalla **FASE 1 — Configurazione del progetto**.
+
+Procedi nel seguente ordine:
+
+1. Verifica l'ambiente di sviluppo disponibile sul computer.
+2. Controlla Node.js e npm.
+3. Proponi una cartella di lavoro per il progetto.
+4. Crea il progetto React + TypeScript + Vite.
+5. Organizza la struttura iniziale.
+6. Installa soltanto le dipendenze necessarie per questa prima fase.
+7. Crea una prima interfaccia responsive.
+8. Predisponi il supporto ai temi chiaro, scuro e automatico.
+9. Avvia il progetto in locale.
+10. Verifica che la build funzioni.
+
+Successivamente procediamo alla FASE 2, dedicata alla selezione della modalità Personal Trainer / Cliente e al salvataggio permanente della preferenza.
+
+**Non iniziare dalle funzionalità avanzate. Voglio prima costruire una base tecnica solida, verificabile e facilmente ampliabile.**
+
+---
+
+# 23. PRINCIPI FONDAMENTALI DEL PROGETTO
+
+Durante lo sviluppo rispettare sempre questi principi:
+
+**Semplicità:** l'applicazione deve essere facile da utilizzare anche da persone poco esperte.
+
+**Compatibilità:** deve funzionare su Android e iPhone.
+
+**Offline-first:** le funzionalità principali non devono richiedere Internet dopo l'installazione.
+
+**Privacy:** i dati rimangono sui dispositivi degli utenti.
+
+**Assenza di costi obbligatori:** utilizzare strumenti gratuiti e hosting statico gratuito.
+
+**Modularità:** il codice deve essere facilmente estendibile.
+
+**Affidabilità:** evitare la perdita dei dati.
+
+**Portabilità:** le schede devono poter essere trasferite tra dispositivi mediante file.
+
+**Manutenibilità:** il progetto deve rimanere comprensibile anche dopo numerose modifiche.
+
+**Esperienza utente:** l'interfaccia deve essere moderna, fluida e ottimizzata per smartphone.
+
+---
+
+# RISULTATO FINALE ATTESO
+
+Voglio ottenere un'unica applicazione PWA installabile su smartphone Android e iPhone.
+
+Al primo avvio l'utente sceglie se utilizzare la modalità Personal Trainer oppure Cliente.
+
+La scelta rimane salvata.
+
+Il personal trainer crea e gestisce le schede di allenamento.
+
+Il cliente importa la scheda ricevuta, visualizza gli esercizi, registra gli allenamenti e consulta i propri progressi.
+
+Tutti i dati vengono salvati localmente.
+
+Le schede vengono trasferite tramite file.
+
+L'applicazione funziona offline dopo la prima installazione e non richiede alcun backend.
+
+Il progetto dovrà essere sviluppato gradualmente con il supporto di Codex, che dovrà intervenire direttamente sui file del progetto quando possibile.
+
+**Inizia verificando l'ambiente di sviluppo e predisponendo la FASE 1.**
