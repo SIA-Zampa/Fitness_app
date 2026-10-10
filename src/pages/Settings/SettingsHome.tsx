@@ -9,9 +9,18 @@ type SettingsHomeProps = {
   theme: UseThemeResult;
   onBack: () => void;
   onChangeRole: () => void;
+  hasTrainerPassword: boolean;
+  onResetTrainerPassword: () => void;
 };
 
-export function SettingsHome({ currentRole, theme, onBack, onChangeRole }: SettingsHomeProps) {
+export function SettingsHome({
+  currentRole,
+  theme,
+  onBack,
+  onChangeRole,
+  hasTrainerPassword,
+  onResetTrainerPassword,
+}: SettingsHomeProps) {
   const roleLabel = currentRole === 'trainer' ? 'Personal Trainer' : 'Cliente';
 
   return (
@@ -36,6 +45,19 @@ export function SettingsHome({ currentRole, theme, onBack, onChangeRole }: Setti
           sistema operativo.
         </p>
         <ThemeSelector theme={theme} />
+      </Card>
+
+      <Card>
+        <p className="eyebrow">Personal Trainer</p>
+        <h2>Password accesso</h2>
+        <p>
+          {hasTrainerPassword
+            ? 'La password trainer e attiva su questo dispositivo.'
+            : 'La password trainer non e ancora stata configurata.'}
+        </p>
+        <Button variant="secondary" onClick={onResetTrainerPassword}>
+          {hasTrainerPassword ? 'Reimposta password' : 'Configura password'}
+        </Button>
       </Card>
 
       <Card tone="quiet">

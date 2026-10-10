@@ -170,6 +170,11 @@ button {
   gap: 14px;
 }
 
+.access-gate {
+  display: grid;
+  width: min(520px, 100%);
+}
+
 .exercise-library-preview,
 .manager-panel {
   display: grid;

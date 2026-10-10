@@ -10,6 +10,7 @@ type UseAppSettingsResult = {
   status: SettingsStatus;
   setRole: (role: AppRole | undefined) => Promise<void>;
   setTheme: (theme: ThemePreference) => Promise<void>;
+  setTrainerPasswordHash: (passwordHash: string | undefined) => Promise<void>;
 };
 
 const fallbackSettings: AppSettings = {
@@ -79,10 +80,15 @@ export function useAppSettings(): UseAppSettingsResult {
     await updateSettings({ ...settings, theme });
   }
 
+  async function setTrainerPasswordHash(passwordHash: string | undefined) {
+    await updateSettings({ ...settings, trainerPasswordHash: passwordHash });
+  }
+
   return {
     settings,
     status,
     setRole,
     setTheme,
+    setTrainerPasswordHash,
   };
 }

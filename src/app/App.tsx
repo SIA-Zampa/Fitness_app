@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { AppShell } from '../components/AppShell/AppShell';
 import { Button } from '../components/Button/Button';
+import { TrainerAccessGate } from '../components/TrainerAccessGate/TrainerAccessGate';
 import { ThemeSelector } from '../components/ThemeSelector/ThemeSelector';
 import { useAppSettings } from '../hooks/useAppSettings';
 import { useTheme } from '../hooks/useTheme';
@@ -13,6 +14,7 @@ type AppView = 'home' | 'settings';
 
 export function App() {
   const [view, setView] = useState<AppView>('home');
+  const [isTrainerUnlocked, setIsTrainerUnlocked] = useState(false);
   const appSettings = useAppSettings();
   const role = appSettings.settings.selectedRole ?? null;
   const theme = useTheme(appSettings.settings.theme, appSettings.setTheme);
@@ -32,6 +34,34 @@ export function App() {
           </div>
         )}
         <Welcome onSelectRole={(nextRole) => void appSettings.setRole(nextRole)} />
+      </AppShell>
+    );
+  }
+
+  if (role === 'trainer' && !isTrainerUnlocked) {
+    return (
+      <AppShell
+        title="Accesso Personal Trainer"
+        actions={
+          <>
+            <ThemeSelector theme={theme} />
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setView('home');
+                void appSettings.setRole(undefined);
+              }}
+            >
+              Cambia modalita
+            </Button>
+          </>
+        }
+      >
+        <TrainerAccessGate
+          passwordHash={appSettings.settings.trainerPasswordHash}
+          onPasswordCreated={appSettings.setTrainerPasswordHash}
+          onUnlocked={() => setIsTrainerUnlocked(true)}
+        />
       </AppShell>
     );
   }
@@ -61,7 +91,15 @@ export function App() {
           currentRole={role}
           theme={theme}
           onBack={() => setView('home')}
-          onChangeRole={() => void appSettings.setRole(undefined)}
+          onChangeRole={() => {
+            setIsTrainerUnlocked(false);
+            void appSettings.setRole(undefined);
+          }}
+          hasTrainerPassword={Boolean(appSettings.settings.trainerPasswordHash)}
+          onResetTrainerPassword={() => {
+            setIsTrainerUnlocked(false);
+            void appSettings.setTrainerPasswordHash(undefined);
+          }}
         />
       ) : role === 'trainer' ? (
         <TrainerHome />

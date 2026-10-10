@@ -6,4 +6,5 @@ export type AppSettings = {
   id: 'local';
   selectedRole?: AppRole;
   theme: ThemePreference;
+  trainerPasswordHash?: string;
 };
