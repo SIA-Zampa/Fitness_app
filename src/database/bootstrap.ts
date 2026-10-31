@@ -1,4 +1,5 @@
 import { db, defaultSettings, initialExercises } from './db';
+import { expandedExercises } from './exerciseCatalog';
 
 export async function bootstrapDatabase() {
   await db.transaction('rw', db.settings, db.exercises, async () => {
@@ -7,10 +8,10 @@ export async function bootstrapDatabase() {
       await db.settings.put(defaultSettings);
     }
 
-    const exerciseCount = await db.exercises.count();
-    if (exerciseCount === 0) {
-      await db.exercises.bulkPut(initialExercises);
-    }
+    const builtins = [...initialExercises, ...expandedExercises];
+    const existing = await db.exercises.bulkGet(builtins.map((exercise) => exercise.id));
+    const missing = builtins.filter((_, index) => !existing[index]);
+    if (missing.length) await db.exercises.bulkAdd(missing);
   });
 }
 

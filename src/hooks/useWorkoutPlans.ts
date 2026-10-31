@@ -14,10 +14,22 @@ type UseWorkoutPlansResult = {
   description: string;
   clientId: string;
   dayNames: string[];
+  goal: string;
+  level: string;
+  weeks: number;
+  trainer: string;
+  sex: 'F' | 'M' | '';
+  effortScale: 'RIR' | 'RPE';
   status: string | null;
   setName: (name: string) => void;
   setDescription: (description: string) => void;
   setClientId: (clientId: string) => void;
+  setGoal: (value: string) => void;
+  setLevel: (value: string) => void;
+  setWeeks: (value: number) => void;
+  setTrainer: (value: string) => void;
+  setSex: (value: 'F' | 'M' | '') => void;
+  setEffortScale: (value: 'RIR' | 'RPE') => void;
   setDayName: (index: number, name: string) => void;
   addDay: () => void;
   removeDay: (index: number) => void;
@@ -33,6 +45,12 @@ export function useWorkoutPlans(): UseWorkoutPlansResult {
   const [description, setDescription] = useState('');
   const [clientId, setClientId] = useState('');
   const [dayNames, setDayNames] = useState(['Giorno 1']);
+  const [goal, setGoal] = useState('');
+  const [level, setLevel] = useState('');
+  const [weeks, setWeeks] = useState(8);
+  const [trainer, setTrainer] = useState('');
+  const [sex, setSex] = useState<'F' | 'M' | ''>('');
+  const [effortScale, setEffortScale] = useState<'RIR' | 'RPE'>('RIR');
   const [status, setStatus] = useState<string | null>(null);
 
   const clientNameById = useMemo(() => {
@@ -99,6 +117,12 @@ export function useWorkoutPlans(): UseWorkoutPlansResult {
         clientId: clientId || undefined,
         name: normalizedName,
         description: description.trim() || undefined,
+        goal: goal.trim() || undefined,
+        level: level.trim() || undefined,
+        weeks,
+        trainer: trainer.trim() || undefined,
+        sex: clients.find((client) => client.id === clientId)?.sex || sex,
+        effortScale,
         version: 1,
         createdAt: now,
         updatedAt: now,
@@ -118,6 +142,9 @@ export function useWorkoutPlans(): UseWorkoutPlansResult {
     setDescription('');
     setClientId('');
     setDayNames(['Giorno 1']);
+    setGoal('');
+    setLevel('');
+    setTrainer('');
     setStatus('Scheda salvata.');
     await loadData();
   }
@@ -178,10 +205,12 @@ export function useWorkoutPlans(): UseWorkoutPlansResult {
     description,
     clientId,
     dayNames,
+    goal, level, weeks, trainer, sex, effortScale,
     status,
     setName,
     setDescription,
     setClientId,
+    setGoal, setLevel, setWeeks, setTrainer, setSex, setEffortScale,
     setDayName,
     addDay,
     removeDay,

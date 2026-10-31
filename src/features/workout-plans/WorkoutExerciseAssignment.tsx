@@ -1,5 +1,6 @@
 import { Button } from '../../components/Button/Button';
 import { useWorkoutExerciseAssignments } from '../../hooks/useWorkoutExerciseAssignments';
+import { intensityTechniques, movementTypes, progressionTypes } from '../../models/workoutOptions';
 
 export function WorkoutExerciseAssignment() {
   const assignments = useWorkoutExerciseAssignments();
@@ -48,6 +49,18 @@ export function WorkoutExerciseAssignment() {
             </label>
           </div>
 
+          {assignments.selectedDay && <div className="form-grid">
+            <label><span>Focus del giorno</span><input key={`${assignments.selectedDayId}-focus`} defaultValue={assignments.selectedDay.focus ?? ''} onBlur={(event) => void assignments.updateDay({ focus: event.target.value })} /></label>
+            <label><span>Note iniziali</span><input key={`${assignments.selectedDayId}-initial`} defaultValue={assignments.selectedDay.initialNotes ?? ''} onBlur={(event) => void assignments.updateDay({ initialNotes: event.target.value })} /></label>
+            <label><span>Note e osservazioni</span><textarea key={`${assignments.selectedDayId}-observations`} defaultValue={assignments.selectedDay.observations ?? ''} onBlur={(event) => void assignments.updateDay({ observations: event.target.value })} /></label>
+          </div>}
+
+          <label className="full-field"><span>Sezione</span><select value={assignments.section} onChange={(event) => assignments.setSection(event.target.value as 'mobility' | 'activation' | 'main')}>
+            <option value="mobility">Mobilita articolare</option>
+            {assignments.canUseActivation && <option value="activation">Attivazione / propriocezione glutei</option>}
+            <option value="main">Allenamento principale</option>
+          </select></label>
+
           <div className="form-grid">
             <label>
               <span>Gruppo muscolare</span>
@@ -82,9 +95,12 @@ export function WorkoutExerciseAssignment() {
             <label>
               <span>Ripetizioni</span>
               <input
+                type="number"
+                min="1"
+                step="1"
+                inputMode="numeric"
                 value={assignments.repetitions}
                 onChange={(event) => assignments.setRepetitions(event.target.value)}
-                placeholder="Es. 8-10"
               />
             </label>
           </div>
@@ -111,6 +127,14 @@ export function WorkoutExerciseAssignment() {
               />
             </label>
           </div>
+          <div className="form-grid">
+            <label><span>Tipo movimento</span><select value={assignments.movementType} onChange={(event) => assignments.setMovementType(event.target.value)}><option value="">Seleziona</option>{[...movementTypes.filter((item) => !assignments.hiddenMovements.includes(item)), ...assignments.customMovements].map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label><span>{assignments.selectedPlan?.effortScale ?? 'RIR'}</span><input type="number" min={(assignments.selectedPlan?.effortScale ?? 'RIR') === 'RPE' ? 1 : 0} max={(assignments.selectedPlan?.effortScale ?? 'RIR') === 'RPE' ? 10 : 5} step="1" inputMode="numeric" value={assignments.effort} onChange={(event) => assignments.setEffort(event.target.value)} /></label>
+            <label><span>Carico</span><span className="unit-input"><input type="number" min="0" step="0.5" inputMode="decimal" value={assignments.load} onChange={(event) => assignments.setLoad(event.target.value)} aria-label="Carico in kg" /><span>kg</span></span></label>
+            <label><span>Tecnica intensita</span><select value={assignments.intensityTechnique} onChange={(event) => assignments.setIntensityTechnique(event.target.value)}><option value="">Seleziona</option>{[...intensityTechniques.filter((item) => !assignments.hiddenTechniques.includes(item)), ...assignments.customTechniques].map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label><span>Progressione</span><select value={assignments.progression} onChange={(event) => assignments.setProgression(event.target.value)}><option value="">Seleziona</option>{progressionTypes.map((item) => <option key={item}>{item}</option>)}</select></label>
+            <label><span>Incremento</span><input value={assignments.increment} onChange={(event) => assignments.setIncrement(event.target.value)} /></label>
+          </div>
 
           <label className="full-field">
             <span>Note esercizio</span>
@@ -136,7 +160,7 @@ export function WorkoutExerciseAssignment() {
                       {assignment.order}. {assignment.exerciseName}
                     </strong>
                     <p>
-                      {assignment.muscleGroup} · {assignment.sets} serie x {assignment.repetitions} ·{' '}
+                      {assignment.section === 'mobility' ? 'Mobilita' : assignment.section === 'activation' ? 'Propriocezione glutei' : 'Principale'} · {assignment.muscleGroup} · {assignment.sets} serie x {assignment.repetitions} ·{' '}
                       {assignment.restSeconds}s recupero
                     </p>
                     {assignment.notes && <small>{assignment.notes}</small>}

@@ -1,6 +1,4 @@
 export const routes = {
-  welcome: '/',
-  trainer: '/trainer',
-  client: '/client',
+  trainer: '/',
   settings: '/settings',
 } as const;

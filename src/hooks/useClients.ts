@@ -6,17 +6,21 @@ type UseClientsResult = {
   clients: Client[];
   name: string;
   notes: string;
+  sex: 'F' | 'M' | '';
   setName: (name: string) => void;
   setNotes: (notes: string) => void;
+  setSex: (sex: 'F' | 'M' | '') => void;
   addClient: () => Promise<void>;
   archiveClient: (id: string) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
+  updateSex: (id: string, sex: 'F' | 'M' | '') => Promise<void>;
 };
 
 export function useClients(): UseClientsResult {
   const [clients, setClients] = useState<Client[]>([]);
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
+  const [sex, setSex] = useState<'F' | 'M' | ''>('');
 
   async function loadClients() {
     const storedClients = await db.clients.orderBy('createdAt').reverse().toArray();
@@ -35,6 +39,7 @@ export function useClients(): UseClientsResult {
     await db.clients.add({
       id: createId('client'),
       name: normalizedName,
+      sex,
       notes: notes.trim() || undefined,
       archived: false,
       createdAt: now,
@@ -42,6 +47,7 @@ export function useClients(): UseClientsResult {
 
     setName('');
     setNotes('');
+    setSex('');
     await loadClients();
   }
 
@@ -61,14 +67,22 @@ export function useClients(): UseClientsResult {
     await loadClients();
   }
 
+  async function updateSex(id: string, value: 'F' | 'M' | '') {
+    await db.clients.update(id, { sex: value });
+    await loadClients();
+  }
+
   return {
     clients,
     name,
     notes,
+    sex,
     setName,
     setNotes,
+    setSex,
     addClient,
     archiveClient,
     deleteClient,
+    updateSex,
   };
 }

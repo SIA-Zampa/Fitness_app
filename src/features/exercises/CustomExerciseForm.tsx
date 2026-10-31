@@ -2,20 +2,9 @@ import { useState } from 'react';
 import { Button } from '../../components/Button/Button';
 import { db } from '../../database/db';
 import { createId } from '../../services/id';
+import { expandedMuscleGroups } from '../../database/exerciseCatalog';
 
-const muscleGroups = [
-  'Petto',
-  'Dorso',
-  'Spalle',
-  'Bicipiti',
-  'Tricipiti',
-  'Quadricipiti',
-  'Femorali',
-  'Glutei',
-  'Polpacci',
-  'Addominali',
-  'Cardio',
-];
+const muscleGroups = expandedMuscleGroups;
 
 type CustomExerciseFormProps = {
   onSaved: (muscleGroup: string) => void;

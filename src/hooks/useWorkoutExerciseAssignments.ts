@@ -12,6 +12,13 @@ type UseWorkoutExerciseAssignmentsResult = {
   days: WorkoutDay[];
   exercises: Exercise[];
   assignedExercises: AssignedExercise[];
+  selectedDay?: WorkoutDay;
+  selectedPlan?: WorkoutPlan;
+  canUseActivation: boolean;
+  customMovements: string[];
+  customTechniques: string[];
+  hiddenMovements: string[];
+  hiddenTechniques: string[];
   selectedPlanId: string;
   selectedDayId: string;
   selectedMuscleGroup: string;
@@ -22,6 +29,13 @@ type UseWorkoutExerciseAssignmentsResult = {
   repetitions: string;
   restSeconds: number;
   notes: string;
+  section: 'mobility' | 'activation' | 'main';
+  movementType: string;
+  effort: string;
+  load: string;
+  intensityTechnique: string;
+  progression: string;
+  increment: string;
   status: string | null;
   setSelectedPlanId: (planId: string) => void;
   setSelectedDayId: (dayId: string) => void;
@@ -31,6 +45,14 @@ type UseWorkoutExerciseAssignmentsResult = {
   setRepetitions: (repetitions: string) => void;
   setRestSeconds: (seconds: number) => void;
   setNotes: (notes: string) => void;
+  setSection: (value: 'mobility' | 'activation' | 'main') => void;
+  setMovementType: (value: string) => void;
+  setEffort: (value: string) => void;
+  setLoad: (value: string) => void;
+  setIntensityTechnique: (value: string) => void;
+  setProgression: (value: string) => void;
+  setIncrement: (value: string) => void;
+  updateDay: (changes: Partial<WorkoutDay>) => Promise<void>;
   addExercise: () => Promise<void>;
   removeExercise: (assignmentId: string) => Promise<void>;
 };
@@ -48,20 +70,40 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
   const [repetitions, setRepetitions] = useState('10');
   const [restSeconds, setRestSeconds] = useState(60);
   const [notes, setNotes] = useState('');
+  const [section, setSection] = useState<'mobility' | 'activation' | 'main'>('main');
+  const [movementType, setMovementType] = useState('');
+  const [effort, setEffort] = useState('');
+  const [load, setLoad] = useState('');
+  const [intensityTechnique, setIntensityTechnique] = useState('');
+  const [progression, setProgression] = useState('');
+  const [increment, setIncrement] = useState('');
+  const [canUseActivation, setCanUseActivation] = useState(false);
+  const [customMovements, setCustomMovements] = useState<string[]>([]);
+  const [customTechniques, setCustomTechniques] = useState<string[]>([]);
+  const [hiddenMovements, setHiddenMovements] = useState<string[]>([]);
+  const [hiddenTechniques, setHiddenTechniques] = useState<string[]>([]);
   const [status, setStatus] = useState<string | null>(null);
 
   async function loadData() {
-    const [storedPlans, storedDays, storedExercises, storedAssignments] = await Promise.all([
+    const [storedPlans, storedDays, storedExercises, storedAssignments, options] = await Promise.all([
       db.workoutPlans.orderBy('updatedAt').reverse().toArray(),
       db.workoutDays.orderBy('order').toArray(),
       db.exercises.orderBy('name').toArray(),
       db.workoutExercises.orderBy('order').toArray(),
+      db.catalogOptions.toArray(),
     ]);
 
     setPlans(storedPlans);
     setAllDays(storedDays);
     setExercises(storedExercises);
     setAssignments(storedAssignments);
+    setCustomMovements(options.filter((item) => item.kind === 'movement' && !item.hidden).map((item) => item.name));
+    setCustomTechniques(options.filter((item) => item.kind === 'technique' && !item.hidden).map((item) => item.name));
+    setHiddenMovements(options.filter((item) => item.kind === 'movement' && item.hidden).map((item) => item.name));
+    setHiddenTechniques(options.filter((item) => item.kind === 'technique' && item.hidden).map((item) => item.name));
+    const plan = storedPlans.find((item) => item.id === (selectedPlanId || storedPlans[0]?.id));
+    const client = plan?.clientId ? await db.clients.get(plan.clientId) : undefined;
+    setCanUseActivation((client?.sex ?? plan?.sex) === 'F');
 
     if (!selectedPlanId && storedPlans[0]) {
       setSelectedPlanIdState(storedPlans[0].id);
@@ -81,22 +123,44 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
   const days = useMemo(() => {
     return allDays.filter((day) => day.planId === selectedPlanId);
   }, [allDays, selectedPlanId]);
+  const selectedDay = days.find((day) => day.id === selectedDayId);
+  const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
+
+  async function updateDay(changes: Partial<WorkoutDay>) {
+    if (!selectedDayId) return;
+    await db.workoutDays.update(selectedDayId, changes);
+    setAllDays((current) => current.map((day) => day.id === selectedDayId ? { ...day, ...changes } : day));
+  }
 
   const exerciseById = useMemo(() => {
     return new Map(exercises.map((exercise) => [exercise.id, exercise]));
   }, [exercises]);
 
+  const sectionExercises = useMemo(() => exercises.filter((exercise) => {
+    if (exercise.archived) return false;
+    if (section === 'mobility') return exercise.muscleGroup === 'Mobilita articolare';
+    if (section === 'activation') return ['Attivazione glutei', 'Propriocezione ed equilibrio'].includes(exercise.muscleGroup);
+    return !['Mobilita articolare', 'Attivazione glutei', 'Propriocezione ed equilibrio'].includes(exercise.muscleGroup);
+  }), [exercises, section]);
+
   const muscleGroups = useMemo(() => {
-    return ['Tutti', ...Array.from(new Set(exercises.map((exercise) => exercise.muscleGroup)))];
-  }, [exercises]);
+    const groups = Array.from(new Set(sectionExercises.map((exercise) => exercise.muscleGroup)));
+    return section === 'mobility' ? groups : ['Tutti', ...groups];
+  }, [sectionExercises, section]);
+
+  const activeMuscleGroup = muscleGroups.includes(selectedMuscleGroup)
+    ? selectedMuscleGroup : muscleGroups[0] ?? '';
 
   const filteredExercises = useMemo(() => {
-    if (selectedMuscleGroup === 'Tutti') {
-      return exercises;
+    if (activeMuscleGroup === 'Tutti') {
+      return sectionExercises;
     }
 
-    return exercises.filter((exercise) => exercise.muscleGroup === selectedMuscleGroup);
-  }, [exercises, selectedMuscleGroup]);
+    return sectionExercises.filter((exercise) => exercise.muscleGroup === activeMuscleGroup);
+  }, [sectionExercises, activeMuscleGroup]);
+
+  const activeExerciseId = filteredExercises.some((exercise) => exercise.id === selectedExerciseId)
+    ? selectedExerciseId : filteredExercises[0]?.id ?? '';
 
   const assignedExercises = useMemo(() => {
     return assignments
@@ -115,6 +179,10 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
     setSelectedPlanIdState(planId);
     const firstDay = allDays.find((day) => day.planId === planId);
     setSelectedDayIdState(firstDay?.id ?? '');
+    const plan = plans.find((item) => item.id === planId);
+    void (plan?.clientId ? db.clients.get(plan.clientId) : Promise.resolve(undefined)).then((client) => {
+      setCanUseActivation((client?.sex ?? plan?.sex) === 'F');
+    });
     setStatus(null);
   }
 
@@ -127,20 +195,38 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
     setSelectedMuscleGroupState(muscleGroup);
     const firstExercise =
       muscleGroup === 'Tutti'
-        ? exercises[0]
-        : exercises.find((exercise) => exercise.muscleGroup === muscleGroup);
+        ? sectionExercises[0]
+        : sectionExercises.find((exercise) => exercise.muscleGroup === muscleGroup);
     setSelectedExerciseId(firstExercise?.id ?? '');
     setStatus(null);
   }
 
+  function changeSection(nextSection: 'mobility' | 'activation' | 'main') {
+    setSection(nextSection);
+    setSelectedMuscleGroupState(nextSection === 'mobility' ? 'Mobilita articolare' : 'Tutti');
+    setSelectedExerciseId('');
+    setStatus(null);
+  }
+
   async function addExercise() {
-    if (!selectedPlanId || !selectedDayId || !selectedExerciseId) {
+    if (!selectedPlanId || !selectedDayId || !activeExerciseId) {
       setStatus('Seleziona scheda, giorno ed esercizio.');
       return;
     }
 
-    if (sets < 1 || restSeconds < 0 || !repetitions.trim()) {
-      setStatus('Controlla serie, ripetizioni e recupero.');
+    if (sets < 1 || restSeconds < 0 || !Number.isInteger(Number(repetitions)) || Number(repetitions) < 1 ||
+        (load !== '' && (!Number.isFinite(Number(load)) || Number(load) < 0))) {
+      setStatus('Controlla serie, ripetizioni, recupero e carico.');
+      return;
+    }
+    const effortValue = Number(effort);
+    const isRpe = selectedPlan?.effortScale === 'RPE';
+    if (effort !== '' && (!Number.isInteger(effortValue) || effortValue < (isRpe ? 1 : 0) || effortValue > (isRpe ? 10 : 5))) {
+      setStatus(`Inserisci un valore ${isRpe ? 'RPE da 1 a 10' : 'RIR da 0 a 5'}.`);
+      return;
+    }
+    if (section === 'activation' && !canUseActivation) {
+      setStatus('La propriocezione glutei e disponibile solo per clienti di sesso femminile.');
       return;
     }
 
@@ -148,11 +234,18 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
     await db.workoutExercises.add({
       id: createId('assignment'),
       workoutDayId: selectedDayId,
-      exerciseId: selectedExerciseId,
+      exerciseId: activeExerciseId,
       sets,
       repetitions: repetitions.trim(),
       restSeconds,
       notes: notes.trim() || undefined,
+      section,
+      movementType: movementType.trim() || undefined,
+      effort: effort.trim() || undefined,
+      load: load.trim() || undefined,
+      intensityTechnique: intensityTechnique.trim() || undefined,
+      progression: progression.trim() || undefined,
+      increment: increment.trim() || undefined,
       order: nextOrder,
     });
 
@@ -172,16 +265,18 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
     days,
     exercises,
     assignedExercises,
+    selectedDay, selectedPlan, canUseActivation, customMovements, customTechniques, hiddenMovements, hiddenTechniques,
     selectedPlanId,
     selectedDayId,
-    selectedMuscleGroup,
-    selectedExerciseId,
+    selectedMuscleGroup: activeMuscleGroup,
+    selectedExerciseId: activeExerciseId,
     muscleGroups,
     filteredExercises,
     sets,
     repetitions,
     restSeconds,
     notes,
+    section, movementType, effort, load, intensityTechnique, progression, increment,
     status,
     setSelectedPlanId,
     setSelectedDayId,
@@ -191,6 +286,7 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
     setRepetitions,
     setRestSeconds,
     setNotes,
+    setSection: changeSection, setMovementType, setEffort, setLoad, setIntensityTechnique, setProgression, setIncrement, updateDay,
     addExercise,
     removeExercise,
   };

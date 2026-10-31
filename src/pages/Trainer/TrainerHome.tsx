@@ -19,7 +19,7 @@ const trainerSections: Array<{
   { id: 'plans', label: 'Schede', description: 'Crea schede e giorni di allenamento.' },
   { id: 'assignments', label: 'Esercizi scheda', description: 'Assegna esercizi ai giorni.' },
   { id: 'exercises', label: 'Libreria', description: 'Consulta e crea esercizi.' },
-  { id: 'export', label: 'Esporta', description: 'Scarica una scheda in formato JSON.' },
+  { id: 'export', label: 'Esporta', description: 'Scarica la scheda cliente in Excel.' },
 ];
 
 export function TrainerHome() {

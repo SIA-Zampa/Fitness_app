@@ -221,6 +221,18 @@ button {
   font-weight: 750;
 }
 
+.unit-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+}
+
+.unit-input input {
+  min-width: 0;
+  flex: 1;
+}
+
 .form-grid select,
 .form-grid input,
 .full-field select,
@@ -251,6 +263,38 @@ button {
 .entity-list {
   display: grid;
   gap: 8px;
+}
+
+.exercise-group {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.exercise-group summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 12px 14px;
+  cursor: pointer;
+  background: var(--surface-muted);
+}
+
+.exercise-group summary span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.exercise-group-items {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+}
+
+.catalog-options-list {
+  padding: 8px;
 }
 
 .exercise-row,

@@ -4,6 +4,7 @@ import type { AppSettings } from '../models/settings';
 export type Client = {
   id: string;
   name: string;
+  sex?: 'F' | 'M' | '';
   notes?: string;
   archived: boolean;
   createdAt: string;
@@ -15,6 +16,7 @@ export type Exercise = {
   muscleGroup: string;
   description?: string;
   isCustom: boolean;
+  archived?: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -24,6 +26,12 @@ export type WorkoutPlan = {
   clientId?: string;
   name: string;
   description?: string;
+  goal?: string;
+  level?: string;
+  weeks?: number;
+  trainer?: string;
+  sex?: 'F' | 'M' | '';
+  effortScale?: 'RIR' | 'RPE';
   version: number;
   createdAt: string;
   updatedAt: string;
@@ -33,6 +41,9 @@ export type WorkoutDay = {
   id: string;
   planId: string;
   name: string;
+  focus?: string;
+  initialNotes?: string;
+  observations?: string;
   order: number;
 };
 
@@ -44,6 +55,13 @@ export type WorkoutExercise = {
   repetitions: string;
   restSeconds: number;
   notes?: string;
+  section?: 'mobility' | 'activation' | 'main';
+  movementType?: string;
+  effort?: string;
+  load?: string;
+  intensityTechnique?: string;
+  progression?: string;
+  increment?: string;
   order: number;
 };
 
@@ -65,6 +83,13 @@ export type SessionSet = {
   completed: boolean;
 };
 
+export type CatalogOption = {
+  id: string;
+  kind: 'movement' | 'technique';
+  name: string;
+  hidden?: boolean;
+};
+
 export class FitnessDatabase extends Dexie {
   settings!: Table<AppSettings, string>;
   clients!: Table<Client, string>;
@@ -74,6 +99,7 @@ export class FitnessDatabase extends Dexie {
   workoutExercises!: Table<WorkoutExercise, string>;
   workoutSessions!: Table<WorkoutSession, string>;
   sessionSets!: Table<SessionSet, string>;
+  catalogOptions!: Table<CatalogOption, string>;
 
   constructor() {
     super('fitness-app');
@@ -87,6 +113,17 @@ export class FitnessDatabase extends Dexie {
       workoutExercises: 'id, workoutDayId, exerciseId, order',
       workoutSessions: 'id, planId, workoutDayId, startedAt, completedAt',
       sessionSets: 'id, sessionId, workoutExerciseId, setNumber, completed',
+    });
+    this.version(2).stores({
+      settings: 'id',
+      clients: 'id, name, archived, createdAt',
+      exercises: 'id, name, muscleGroup, isCustom',
+      workoutPlans: 'id, clientId, name, version, updatedAt',
+      workoutDays: 'id, planId, order',
+      workoutExercises: 'id, workoutDayId, exerciseId, order',
+      workoutSessions: 'id, planId, workoutDayId, startedAt, completedAt',
+      sessionSets: 'id, sessionId, workoutExerciseId, setNumber, completed',
+      catalogOptions: 'id, kind, name',
     });
   }
 }

@@ -1,5 +1,6 @@
 import { Button } from '../../components/Button/Button';
 import { useWorkoutPlans } from '../../hooks/useWorkoutPlans';
+import { goals, levels } from '../../models/workoutOptions';
 
 export function WorkoutPlanManager() {
   const plans = useWorkoutPlans();
@@ -12,6 +13,15 @@ export function WorkoutPlanManager() {
           <h2>Creazione schede</h2>
         </div>
         <span>{plans.plans.length} schede</span>
+      </div>
+
+      <div className="form-grid">
+        <label><span>Obiettivo</span><select value={plans.goal} onChange={(event) => plans.setGoal(event.target.value)}><option value="">Seleziona</option>{goals.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label><span>Livello</span><select value={plans.level} onChange={(event) => plans.setLevel(event.target.value)}><option value="">Seleziona</option>{levels.map((item) => <option key={item}>{item}</option>)}</select></label>
+        <label><span>Settimane</span><input type="number" min="1" value={plans.weeks} onChange={(event) => plans.setWeeks(Number(event.target.value))} /></label>
+        <label><span>Trainer</span><input value={plans.trainer} onChange={(event) => plans.setTrainer(event.target.value)} /></label>
+        <label><span>Scala sforzo</span><select value={plans.effortScale} onChange={(event) => plans.setEffortScale(event.target.value as 'RIR' | 'RPE')}><option>RIR</option><option>RPE</option></select></label>
+        {!plans.clientId && <label><span>Sesso</span><select value={plans.sex} onChange={(event) => plans.setSex(event.target.value as 'F' | 'M' | '')}><option value="">Non indicato</option><option value="F">Femminile</option><option value="M">Maschile</option></select></label>}
       </div>
 
       <div className="form-grid">

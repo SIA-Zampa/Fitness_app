@@ -9,6 +9,7 @@ type UseExercisesResult = {
   search: string;
   setSearch: (search: string) => void;
   reload: () => Promise<void>;
+  deleteExercise: (id: string) => Promise<void>;
 };
 
 export function useExercises(): UseExercisesResult {
@@ -19,6 +20,16 @@ export function useExercises(): UseExercisesResult {
   async function loadExercises() {
     const storedExercises = await db.exercises.orderBy('muscleGroup').toArray();
     setExercises(storedExercises);
+    setSelectedMuscleGroup((current) => current === 'Tutti' || storedExercises.some((exercise) => !exercise.archived && exercise.muscleGroup === current) ? current : 'Tutti');
+  }
+
+  async function deleteExercise(id: string) {
+    const exercise = await db.exercises.get(id);
+    if (!exercise) return;
+    const confirmed = window.confirm(`Eliminare "${exercise.name}" dalla libreria? Le schede gia create resteranno invariate.`);
+    if (!confirmed) return;
+    await db.exercises.update(id, { archived: true });
+    await loadExercises();
   }
 
   useEffect(() => {
@@ -26,13 +37,14 @@ export function useExercises(): UseExercisesResult {
   }, []);
 
   const muscleGroups = useMemo(() => {
-    return ['Tutti', ...Array.from(new Set(exercises.map((exercise) => exercise.muscleGroup)))];
+    return ['Tutti', ...Array.from(new Set(exercises.filter((exercise) => !exercise.archived).map((exercise) => exercise.muscleGroup)))];
   }, [exercises]);
 
   const filteredExercises = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
     return exercises.filter((exercise) => {
+      if (exercise.archived) return false;
       const matchesGroup =
         selectedMuscleGroup === 'Tutti' || exercise.muscleGroup === selectedMuscleGroup;
       const matchesSearch =
@@ -50,5 +62,6 @@ export function useExercises(): UseExercisesResult {
     search,
     setSearch,
     reload: loadExercises,
+    deleteExercise,
   };
 }

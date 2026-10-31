@@ -33,6 +33,14 @@ export function ClientManager() {
           />
         </label>
       </div>
+      <label className="full-field">
+        <span>Sesso per la scheda</span>
+        <select value={clients.sex} onChange={(event) => clients.setSex(event.target.value as 'F' | 'M' | '')}>
+          <option value="">Non indicato</option>
+          <option value="F">Femminile</option>
+          <option value="M">Maschile</option>
+        </select>
+      </label>
 
       <Button onClick={() => void clients.addClient()}>Aggiungi cliente</Button>
 
@@ -46,6 +54,14 @@ export function ClientManager() {
                 <strong>{client.name}</strong>
                 <p>{client.notes || 'Nessuna nota'}</p>
                 <small>ID: {client.id}</small>
+                <label>
+                  <span>Sesso</span>
+                  <select value={client.sex ?? ''} onChange={(event) => void clients.updateSex(client.id, event.target.value as 'F' | 'M' | '')}>
+                    <option value="">Non indicato</option>
+                    <option value="F">Femminile</option>
+                    <option value="M">Maschile</option>
+                  </select>
+                </label>
               </div>
               <div className="row-actions">
                 <Button variant="ghost" onClick={() => void clients.archiveClient(client.id)}>
