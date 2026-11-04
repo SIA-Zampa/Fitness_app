@@ -1,10 +1,7 @@
 import { db } from '../database/db';
+import { downloadExcel, excelFileName } from './excelDownload';
 
 const headings = ['#', 'Gruppo / area', 'Esercizio', 'Tipo movimento', 'Serie', 'Rip./tempo', 'Recupero', 'RIR / RPE', 'Carico', 'Tecnica intensita', 'Progressione', 'Incremento', 'Note'];
-
-function safeName(value: string) {
-  return value.normalize('NFKD').replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'scheda';
-}
 
 function excelLoad(value?: string): number | string {
   const load = value?.trim() ?? '';
@@ -87,6 +84,13 @@ export async function downloadWorkoutPlanExcel(planId: string) {
         row.height = 32;
         row.alignment = { vertical: 'middle', wrapText: true };
         row.eachCell((cell) => { cell.border = { bottom: { style: 'hair', color: { argb: 'FFCBD9D1' } } }; });
+        // These fields also accept ranges and values with units, stored as text.
+        for (const column of [6, 8, 9, 12]) {
+          const cell = row.getCell(column);
+          if (typeof cell.value === 'string' && /^\s*[+-]?\d/.test(cell.value)) {
+            cell.alignment = { ...cell.alignment, horizontal: 'center' };
+          }
+        }
       }
     }
     const observations = sheet.addRow(['NOTE E OSSERVAZIONI DELLA GIORNATA', day.observations ?? '']);
@@ -96,14 +100,11 @@ export async function downloadWorkoutPlanExcel(planId: string) {
     sheet.addRow([]);
   }
 
-  const bytes = await book.xlsx.writeBuffer();
-  const blob = new Blob([bytes as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${safeName(plan.name)}_v${plan.version}.xlsx`;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  sheet.eachRow((row) => row.eachCell((cell) => {
+    if (typeof cell.value === 'number') {
+      cell.alignment = { ...cell.alignment, horizontal: 'center' };
+    }
+  }));
+
+  await downloadExcel(book, `${excelFileName(plan.name, 'scheda')}_v${plan.version}.xlsx`);
 }

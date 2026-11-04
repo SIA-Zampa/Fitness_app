@@ -5,9 +5,29 @@ export type Client = {
   id: string;
   name: string;
   sex?: 'F' | 'M' | '';
+  birthDate?: string;
+  age?: number;
+  weightKg?: number;
+  measurementsCm?: Partial<Record<ClientMeasurement, number>>;
+  measurementsByWeek?: WeeklyClientMeasurements[];
+  measurementsByMonth?: MonthlyClientMeasurements[];
+  level?: string;
+  criticalities?: string;
   notes?: string;
   archived: boolean;
   createdAt: string;
+};
+
+export type ClientMeasurement = 'shoulders' | 'chest' | 'arm' | 'forearm' | 'waist' | 'hips' | 'thigh' | 'calf';
+
+export type WeeklyClientMeasurements = {
+  week: number;
+  measurementsCm: Partial<Record<ClientMeasurement, number>>;
+};
+
+export type MonthlyClientMeasurements = {
+  month: number;
+  measurementsCm: Partial<Record<ClientMeasurement, number>>;
 };
 
 export type Exercise = {

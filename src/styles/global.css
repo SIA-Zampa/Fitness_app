@@ -563,6 +563,49 @@ button {
   justify-content: flex-end;
 }
 
+.monthly-measurements {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.monthly-measurement {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.monthly-measurement .section-title-row {
+  margin-bottom: 12px;
+}
+
+.measurement-progress {
+  margin: 12px 0;
+}
+
+.client-row > div:first-child {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.measurement-progress-scroll {
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.measurement-progress table {
+  border-collapse: collapse;
+  min-width: 100%;
+}
+
+.measurement-progress th,
+.measurement-progress td {
+  padding: 8px;
+  border: 1px solid var(--line);
+  text-align: center;
+  white-space: nowrap;
+}
+
 .custom-exercise-form {
   display: grid;
   gap: 12px;

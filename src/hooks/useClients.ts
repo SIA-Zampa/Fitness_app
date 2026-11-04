@@ -2,25 +2,10 @@ import { useEffect, useState } from 'react';
 import { db, type Client } from '../database/db';
 import { createId } from '../services/id';
 
-type UseClientsResult = {
-  clients: Client[];
-  name: string;
-  notes: string;
-  sex: 'F' | 'M' | '';
-  setName: (name: string) => void;
-  setNotes: (notes: string) => void;
-  setSex: (sex: 'F' | 'M' | '') => void;
-  addClient: () => Promise<void>;
-  archiveClient: (id: string) => Promise<void>;
-  deleteClient: (id: string) => Promise<void>;
-  updateSex: (id: string, sex: 'F' | 'M' | '') => Promise<void>;
-};
+export type ClientProfile = Pick<Client, 'name' | 'level' | 'criticalities' | 'notes' | 'sex' | 'birthDate' | 'age' | 'weightKg' | 'measurementsByMonth'>;
 
-export function useClients(): UseClientsResult {
+export function useClients() {
   const [clients, setClients] = useState<Client[]>([]);
-  const [name, setName] = useState('');
-  const [notes, setNotes] = useState('');
-  const [sex, setSex] = useState<'F' | 'M' | ''>('');
 
   async function loadClients() {
     const storedClients = await db.clients.orderBy('createdAt').reverse().toArray();
@@ -31,31 +16,29 @@ export function useClients(): UseClientsResult {
     void loadClients();
   }, []);
 
-  async function addClient() {
-    const normalizedName = name.trim();
-    if (!normalizedName) return;
+  async function saveClient(profile: ClientProfile, id?: string) {
+    const name = profile.name.trim();
+    if (!name) throw new Error('Inserisci il nome del cliente.');
 
-    const now = new Date().toISOString();
-    await db.clients.add({
-      id: createId('client'),
-      name: normalizedName,
-      sex,
-      notes: notes.trim() || undefined,
-      archived: false,
-      createdAt: now,
-    });
-
-    setName('');
-    setNotes('');
-    setSex('');
+    if (id) {
+      const updated = await db.clients.update(id, { ...profile, name });
+      if (!updated) throw new Error('Cliente non trovato.');
+    } else {
+      await db.clients.add({
+        ...profile,
+        id: createId('client'),
+        name,
+        archived: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
     await loadClients();
   }
 
   async function archiveClient(id: string) {
-    const client = await db.clients.get(id);
-    if (!client) return;
-
-    await db.clients.update(id, { archived: !client.archived });
+    await db.clients.where('id').equals(id).modify((client) => {
+      client.archived = !client.archived;
+    });
     await loadClients();
   }
 
@@ -67,22 +50,5 @@ export function useClients(): UseClientsResult {
     await loadClients();
   }
 
-  async function updateSex(id: string, value: 'F' | 'M' | '') {
-    await db.clients.update(id, { sex: value });
-    await loadClients();
-  }
-
-  return {
-    clients,
-    name,
-    notes,
-    sex,
-    setName,
-    setNotes,
-    setSex,
-    addClient,
-    archiveClient,
-    deleteClient,
-    updateSex,
-  };
+  return { clients, saveClient, archiveClient, deleteClient };
 }
