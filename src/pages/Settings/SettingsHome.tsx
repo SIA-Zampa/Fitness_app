@@ -1,6 +1,7 @@
 import { Button } from '../../components/Button/Button';
 import { Card } from '../../components/Card/Card';
 import { ThemeSelector } from '../../components/ThemeSelector/ThemeSelector';
+import { DataBackupPanel } from '../../features/import-export/DataBackupPanel';
 import type { UseThemeResult } from '../../hooks/useTheme';
 
 type SettingsHomeProps = {
@@ -26,6 +27,7 @@ export function SettingsHome({ theme, onBack }: SettingsHomeProps) {
         <p>
           Clienti, esercizi e schede restano salvati localmente su questo dispositivo.
         </p>
+        <DataBackupPanel />
         <Button variant="ghost" onClick={onBack}>
           Torna alla dashboard
         </Button>
