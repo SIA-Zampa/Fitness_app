@@ -63,7 +63,7 @@ export function ExerciseLibraryPreview() {
                   <article className="exercise-row">
                     <div><strong>{exercise.name}</strong>{exercise.description && <p>{exercise.description}</p>}</div>
                     <div className="row-actions">
-                      {exercise.isCustom && <Button variant="ghost" onClick={() => setEditing(exercise)} aria-label={`Modifica ${exercise.name}`}>Modifica</Button>}
+                      <Button variant="ghost" onClick={() => setEditing(exercise)} aria-label={`Modifica ${exercise.name}`}>Modifica</Button>
                       <Button variant="ghost" onClick={() => void exercises.deleteExercise(exercise.id)} aria-label={`Elimina ${exercise.name}`}>Elimina</Button>
                     </div>
                   </article>

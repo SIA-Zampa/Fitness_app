@@ -16,6 +16,7 @@ export function CustomExerciseForm({ exercise, onSaved, onCancel }: CustomExerci
   const [name, setName] = useState(exercise?.name ?? '');
   const [muscleGroup, setMuscleGroup] = useState(exercise?.muscleGroup ?? muscleGroups[0]);
   const [description, setDescription] = useState(exercise?.description ?? '');
+  const availableGroups = muscleGroups.includes(muscleGroup) ? muscleGroups : [muscleGroup, ...muscleGroups];
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -79,7 +80,7 @@ export function CustomExerciseForm({ exercise, onSaved, onCancel }: CustomExerci
         <label>
           <span>Gruppo muscolare</span>
           <select value={muscleGroup} onChange={(event) => setMuscleGroup(event.target.value)}>
-            {muscleGroups.map((group) => (
+            {availableGroups.map((group) => (
               <option key={group} value={group}>
                 {group}
               </option>

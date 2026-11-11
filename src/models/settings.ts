@@ -7,4 +7,5 @@ export type AppSettings = {
   selectedRole?: AppRole;
   theme: ThemePreference;
   trainerPasswordHash?: string;
+  mobilityCategoriesMigrated?: boolean;
 };
