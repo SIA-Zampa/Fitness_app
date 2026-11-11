@@ -12,7 +12,12 @@ const catalog: Record<string, string[]> = {
   Polpacci: ['Calf raise in piedi', 'Calf raise seduto', 'Calf raise alla pressa', 'Calf raise monopodalico'],
   Addominali: ['Crunch', 'Crunch inverso', 'Leg raise', 'Hanging knee raise', 'Side plank', 'Dead bug', 'Russian twist', 'Ab wheel', 'Pallof press'],
   Cardio: ['Cyclette', 'Ellittica', 'Vogatore', 'Assault bike', 'Salto corda', 'Camminata inclinata'],
-  'Mobilita articolare': ['Circonduzioni spalle', 'Mobilita toracica', 'Cat-cow', 'Rotazioni anca', 'Mobilita caviglia', 'World greatest stretch', 'Stretching dinamico flessori anca'],
+  'Mobilita articolare': [],
+  'Mobilita spalle e braccia': ['Circonduzioni spalle'],
+  'Mobilita colonna e torace': ['Mobilita toracica', 'Cat-cow'],
+  'Mobilita anche': ['Rotazioni anca', 'Stretching dinamico flessori anca'],
+  'Mobilita caviglie': ['Mobilita caviglia'],
+  'Mobilita globale': ['World greatest stretch'],
   'Core e stabilita': ['Bird dog', 'Hollow hold', 'Farmer walk', 'Suitcase carry', 'Plank con tocco spalle'],
   'Full Body e funzionale': ['Kettlebell swing', 'Burpee', 'Thruster', 'Clean kettlebell', 'Battle rope', 'Sled push'],
   'Attivazione glutei': ['Monster walk', 'Lateral band walk', 'Ponte glutei con miniband', 'Abduzione quadrupedia', 'Single leg glute bridge'],
@@ -20,12 +25,13 @@ const catalog: Record<string, string[]> = {
 };
 
 export const expandedMuscleGroups = Object.keys(catalog);
+export const mobilityGroups = expandedMuscleGroups.filter((group) => group.startsWith('Mobilita '));
 
 const timestamp = '2026-01-01T00:00:00.000Z';
 
 export const expandedExercises: Exercise[] = Object.entries(catalog).flatMap(([muscleGroup, names]) =>
   names.map((name) => ({
-    id: `builtin-${muscleGroup}-${name}`.normalize('NFKD').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    id: `builtin-${mobilityGroups.includes(muscleGroup) ? 'Mobilita articolare' : muscleGroup}-${name}`.normalize('NFKD').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     name,
     muscleGroup,
     isCustom: false,

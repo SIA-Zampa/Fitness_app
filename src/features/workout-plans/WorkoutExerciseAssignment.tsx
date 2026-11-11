@@ -1,12 +1,14 @@
+import { useRef } from 'react';
 import { Button } from '../../components/Button/Button';
 import { useWorkoutExerciseAssignments } from '../../hooks/useWorkoutExerciseAssignments';
 import { intensityTechniques, movementTypes, progressionTypes } from '../../models/workoutOptions';
 
 export function WorkoutExerciseAssignment() {
   const assignments = useWorkoutExerciseAssignments();
+  const managerRef = useRef<HTMLElement>(null);
 
   return (
-    <section className="manager-panel" aria-label="Esercizi della scheda">
+    <section ref={managerRef} className="manager-panel" aria-label="Esercizi della scheda">
       <div className="section-title-row">
         <div>
           <p className="eyebrow">Scheda</p>
@@ -19,6 +21,7 @@ export function WorkoutExerciseAssignment() {
         <p className="empty-copy">Crea prima una scheda per assegnare gli esercizi.</p>
       ) : (
         <>
+          {assignments.editingAssignmentId && <h3>Modifica esercizio assegnato</h3>}
           <div className="form-grid">
             <label>
               <span>Scheda</span>
@@ -84,7 +87,7 @@ export function WorkoutExerciseAssignment() {
               >
                 {assignments.filteredExercises.map((exercise) => (
                   <option key={exercise.id} value={exercise.id}>
-                    {exercise.name}
+                    {exercise.name}{exercise.archived ? ' (archiviato)' : ''}
                   </option>
                 ))}
               </select>
@@ -147,7 +150,12 @@ export function WorkoutExerciseAssignment() {
           </label>
 
           {assignments.status && <p className="form-status">{assignments.status}</p>}
-          <Button onClick={() => void assignments.addExercise()}>Aggiungi esercizio</Button>
+          <div className="row-actions">
+            <Button onClick={() => void assignments.addExercise()}>
+              {assignments.editingAssignmentId ? 'Salva modifiche' : 'Aggiungi esercizio'}
+            </Button>
+            {assignments.editingAssignmentId && <Button variant="ghost" onClick={assignments.cancelEdit}>Annulla</Button>}
+          </div>
 
           <div className="entity-list">
             {assignments.assignedExercises.length === 0 ? (
@@ -166,6 +174,12 @@ export function WorkoutExerciseAssignment() {
                     {assignment.notes && <small>{assignment.notes}</small>}
                   </div>
                   <div className="row-actions">
+                    <Button variant="ghost" onClick={() => {
+                      assignments.editExercise(assignment.id);
+                      managerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}>
+                      Modifica
+                    </Button>
                     <Button variant="ghost" onClick={() => void assignments.removeExercise(assignment.id)}>
                       Rimuovi
                     </Button>

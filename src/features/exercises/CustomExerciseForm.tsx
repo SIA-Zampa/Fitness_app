@@ -1,19 +1,21 @@
 import { useState } from 'react';
 import { Button } from '../../components/Button/Button';
-import { db } from '../../database/db';
+import { db, type Exercise } from '../../database/db';
 import { createId } from '../../services/id';
 import { expandedMuscleGroups } from '../../database/exerciseCatalog';
 
 const muscleGroups = expandedMuscleGroups;
 
 type CustomExerciseFormProps = {
+  exercise?: Exercise;
   onSaved: (muscleGroup: string) => void;
+  onCancel?: () => void;
 };
 
-export function CustomExerciseForm({ onSaved }: CustomExerciseFormProps) {
-  const [name, setName] = useState('');
-  const [muscleGroup, setMuscleGroup] = useState(muscleGroups[0]);
-  const [description, setDescription] = useState('');
+export function CustomExerciseForm({ exercise, onSaved, onCancel }: CustomExerciseFormProps) {
+  const [name, setName] = useState(exercise?.name ?? '');
+  const [muscleGroup, setMuscleGroup] = useState(exercise?.muscleGroup ?? muscleGroups[0]);
+  const [description, setDescription] = useState(exercise?.description ?? '');
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -29,19 +31,29 @@ export function CustomExerciseForm({ onSaved }: CustomExerciseFormProps) {
 
     try {
       const now = new Date().toISOString();
-      await db.exercises.add({
-        id: createId('exercise'),
-        name: normalizedName,
-        muscleGroup,
-        description: description.trim() || undefined,
-        isCustom: true,
-        createdAt: now,
-        updatedAt: now,
-      });
+      if (exercise) {
+        const updated = await db.exercises.update(exercise.id, {
+          name: normalizedName,
+          muscleGroup,
+          description: description.trim() || undefined,
+          updatedAt: now,
+        });
+        if (!updated) throw new Error('Esercizio non trovato.');
+      } else {
+        await db.exercises.add({
+          id: createId('exercise'),
+          name: normalizedName,
+          muscleGroup,
+          description: description.trim() || undefined,
+          isCustom: true,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
 
       setName('');
       setDescription('');
-      setStatus('Esercizio salvato.');
+      setStatus(exercise ? 'Esercizio modificato.' : 'Esercizio salvato.');
       onSaved(muscleGroup);
     } catch (error) {
       console.error('Unable to save custom exercise', error);
@@ -53,6 +65,7 @@ export function CustomExerciseForm({ onSaved }: CustomExerciseFormProps) {
 
   return (
     <div className="custom-exercise-form">
+      {exercise && <h3>Modifica {exercise.name}</h3>}
       <div className="form-grid">
         <label>
           <span>Nome esercizio</span>
@@ -87,8 +100,9 @@ export function CustomExerciseForm({ onSaved }: CustomExerciseFormProps) {
 
       {status && <p className="form-status">{status}</p>}
       <Button onClick={() => void saveExercise()} disabled={isSaving}>
-        {isSaving ? 'Salvataggio...' : 'Salva esercizio'}
+        {isSaving ? 'Salvataggio...' : exercise ? 'Salva modifiche' : 'Salva esercizio'}
       </Button>
+      {exercise && <Button variant="ghost" onClick={onCancel} disabled={isSaving}>Annulla</Button>}
     </div>
   );
 }

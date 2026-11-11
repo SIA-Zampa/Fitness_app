@@ -12,6 +12,11 @@ export async function bootstrapDatabase() {
     const existing = await db.exercises.bulkGet(builtins.map((exercise) => exercise.id));
     const missing = builtins.filter((_, index) => !existing[index]);
     if (missing.length) await db.exercises.bulkAdd(missing);
+    const moved = existing.flatMap((stored, index) =>
+      stored && stored.muscleGroup !== builtins[index].muscleGroup
+        ? [{ ...stored, muscleGroup: builtins[index].muscleGroup }]
+        : []);
+    if (moved.length) await db.exercises.bulkPut(moved);
   });
 }
 

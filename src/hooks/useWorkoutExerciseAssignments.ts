@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { db, type Exercise, type WorkoutDay, type WorkoutExercise, type WorkoutPlan } from '../database/db';
 import { createId } from '../services/id';
+import { mobilityGroups } from '../database/exerciseCatalog';
 
 type AssignedExercise = WorkoutExercise & {
   exerciseName: string;
@@ -37,6 +38,7 @@ type UseWorkoutExerciseAssignmentsResult = {
   progression: string;
   increment: string;
   status: string | null;
+  editingAssignmentId: string | null;
   setSelectedPlanId: (planId: string) => void;
   setSelectedDayId: (dayId: string) => void;
   setSelectedMuscleGroup: (muscleGroup: string) => void;
@@ -54,6 +56,8 @@ type UseWorkoutExerciseAssignmentsResult = {
   setIncrement: (value: string) => void;
   updateDay: (changes: Partial<WorkoutDay>) => Promise<void>;
   addExercise: () => Promise<void>;
+  editExercise: (assignmentId: string) => void;
+  cancelEdit: () => void;
   removeExercise: (assignmentId: string) => Promise<void>;
 };
 
@@ -83,6 +87,7 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
   const [hiddenMovements, setHiddenMovements] = useState<string[]>([]);
   const [hiddenTechniques, setHiddenTechniques] = useState<string[]>([]);
   const [status, setStatus] = useState<string | null>(null);
+  const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(null);
 
   async function loadData() {
     const [storedPlans, storedDays, storedExercises, storedAssignments, options] = await Promise.all([
@@ -138,26 +143,28 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
 
   const sectionExercises = useMemo(() => exercises.filter((exercise) => {
     if (exercise.archived) return false;
-    if (section === 'mobility') return exercise.muscleGroup === 'Mobilita articolare';
+    if (section === 'mobility') return mobilityGroups.includes(exercise.muscleGroup);
     if (section === 'activation') return ['Attivazione glutei', 'Propriocezione ed equilibrio'].includes(exercise.muscleGroup);
-    return !['Mobilita articolare', 'Attivazione glutei', 'Propriocezione ed equilibrio'].includes(exercise.muscleGroup);
+    return !mobilityGroups.includes(exercise.muscleGroup) && !['Attivazione glutei', 'Propriocezione ed equilibrio'].includes(exercise.muscleGroup);
   }), [exercises, section]);
 
   const muscleGroups = useMemo(() => {
     const groups = Array.from(new Set(sectionExercises.map((exercise) => exercise.muscleGroup)));
-    return section === 'mobility' ? groups : ['Tutti', ...groups];
+    return ['Tutti', ...groups];
   }, [sectionExercises, section]);
 
   const activeMuscleGroup = muscleGroups.includes(selectedMuscleGroup)
     ? selectedMuscleGroup : muscleGroups[0] ?? '';
 
   const filteredExercises = useMemo(() => {
-    if (activeMuscleGroup === 'Tutti') {
-      return sectionExercises;
-    }
-
-    return sectionExercises.filter((exercise) => exercise.muscleGroup === activeMuscleGroup);
-  }, [sectionExercises, activeMuscleGroup]);
+    const visible = activeMuscleGroup === 'Tutti'
+      ? sectionExercises
+      : sectionExercises.filter((exercise) => exercise.muscleGroup === activeMuscleGroup);
+    const editingExercise = exercises.find((exercise) => exercise.id === selectedExerciseId);
+    return editingAssignmentId && editingExercise && !visible.some((exercise) => exercise.id === editingExercise.id)
+      ? [...visible, editingExercise]
+      : visible;
+  }, [sectionExercises, activeMuscleGroup, exercises, editingAssignmentId, selectedExerciseId]);
 
   const activeExerciseId = filteredExercises.some((exercise) => exercise.id === selectedExerciseId)
     ? selectedExerciseId : filteredExercises[0]?.id ?? '';
@@ -176,6 +183,7 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
   }, [assignments, exerciseById, selectedDayId]);
 
   function setSelectedPlanId(planId: string) {
+    setEditingAssignmentId(null);
     setSelectedPlanIdState(planId);
     const firstDay = allDays.find((day) => day.planId === planId);
     setSelectedDayIdState(firstDay?.id ?? '');
@@ -187,6 +195,7 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
   }
 
   function setSelectedDayId(dayId: string) {
+    setEditingAssignmentId(null);
     setSelectedDayIdState(dayId);
     setStatus(null);
   }
@@ -203,8 +212,51 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
 
   function changeSection(nextSection: 'mobility' | 'activation' | 'main') {
     setSection(nextSection);
-    setSelectedMuscleGroupState(nextSection === 'mobility' ? 'Mobilita articolare' : 'Tutti');
+    setSelectedMuscleGroupState('Tutti');
     setSelectedExerciseId('');
+    setStatus(null);
+  }
+
+  function resetEditor() {
+    setEditingAssignmentId(null);
+    setSelectedMuscleGroupState('Tutti');
+    setSelectedExerciseId('');
+    setSets(3);
+    setRepetitions('10');
+    setRestSeconds(60);
+    setNotes('');
+    setSection('main');
+    setMovementType('');
+    setEffort('');
+    setLoad('');
+    setIntensityTechnique('');
+    setProgression('');
+    setIncrement('');
+  }
+
+  function editExercise(assignmentId: string) {
+    const assignment = assignments.find((item) => item.id === assignmentId && item.workoutDayId === selectedDayId);
+    if (!assignment) return;
+    const exercise = exerciseById.get(assignment.exerciseId);
+    setEditingAssignmentId(assignment.id);
+    setSection(assignment.section ?? 'main');
+    setSelectedMuscleGroupState(exercise?.muscleGroup ?? 'Tutti');
+    setSelectedExerciseId(assignment.exerciseId);
+    setSets(assignment.sets);
+    setRepetitions(assignment.repetitions);
+    setRestSeconds(assignment.restSeconds);
+    setNotes(assignment.notes ?? '');
+    setMovementType(assignment.movementType ?? '');
+    setEffort(assignment.effort ?? '');
+    setLoad(assignment.load ?? '');
+    setIntensityTechnique(assignment.intensityTechnique ?? '');
+    setProgression(assignment.progression ?? '');
+    setIncrement(assignment.increment ?? '');
+    setStatus(null);
+  }
+
+  function cancelEdit() {
+    resetEditor();
     setStatus(null);
   }
 
@@ -230,10 +282,7 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
       return;
     }
 
-    const nextOrder = assignedExercises.length + 1;
-    await db.workoutExercises.add({
-      id: createId('assignment'),
-      workoutDayId: selectedDayId,
+    const values = {
       exerciseId: activeExerciseId,
       sets,
       repetitions: repetitions.trim(),
@@ -246,16 +295,32 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
       intensityTechnique: intensityTechnique.trim() || undefined,
       progression: progression.trim() || undefined,
       increment: increment.trim() || undefined,
-      order: nextOrder,
-    });
+    };
 
-    setNotes('');
-    setStatus('Esercizio aggiunto al giorno.');
+    if (editingAssignmentId) {
+      const assignment = await db.workoutExercises.get(editingAssignmentId);
+      if (!assignment || assignment.workoutDayId !== selectedDayId) {
+        setStatus('Esercizio della scheda non trovato.');
+        return;
+      }
+      await db.workoutExercises.update(editingAssignmentId, values);
+    } else {
+      await db.workoutExercises.add({
+        id: createId('assignment'),
+        workoutDayId: selectedDayId,
+        order: assignedExercises.length + 1,
+        ...values,
+      });
+    }
+
+    setStatus(editingAssignmentId ? 'Esercizio modificato.' : 'Esercizio aggiunto al giorno.');
+    resetEditor();
     await loadData();
   }
 
   async function removeExercise(assignmentId: string) {
     await db.workoutExercises.delete(assignmentId);
+    if (editingAssignmentId === assignmentId) resetEditor();
     setStatus('Esercizio rimosso.');
     await loadData();
   }
@@ -277,7 +342,7 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
     restSeconds,
     notes,
     section, movementType, effort, load, intensityTechnique, progression, increment,
-    status,
+    status, editingAssignmentId,
     setSelectedPlanId,
     setSelectedDayId,
     setSelectedMuscleGroup,
@@ -288,6 +353,8 @@ export function useWorkoutExerciseAssignments(): UseWorkoutExerciseAssignmentsRe
     setNotes,
     setSection: changeSection, setMovementType, setEffort, setLoad, setIntensityTechnique, setProgression, setIncrement, updateDay,
     addExercise,
+    editExercise,
+    cancelEdit,
     removeExercise,
   };
 }

@@ -1,11 +1,13 @@
 import { useExercises } from '../../hooks/useExercises';
 import { CustomExerciseForm } from './CustomExerciseForm';
 import { CatalogOptionsManager } from './CatalogOptionsManager';
-import { useMemo } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Button } from '../../components/Button/Button';
+import type { Exercise } from '../../database/db';
 
 export function ExerciseLibraryPreview() {
   const exercises = useExercises();
+  const [editing, setEditing] = useState<Exercise>();
   const groups = useMemo(() => {
     const grouped = new Map<string, typeof exercises.exercises>();
     for (const exercise of exercises.exercises) {
@@ -29,7 +31,7 @@ export function ExerciseLibraryPreview() {
           <span>Gruppo muscolare</span>
           <select
             value={exercises.selectedMuscleGroup}
-            onChange={(event) => exercises.setSelectedMuscleGroup(event.target.value)}
+            onChange={(event) => { setEditing(undefined); exercises.setSelectedMuscleGroup(event.target.value); }}
           >
             {exercises.muscleGroups.map((muscleGroup) => (
               <option key={muscleGroup} value={muscleGroup}>
@@ -44,7 +46,7 @@ export function ExerciseLibraryPreview() {
           <input
             type="search"
             value={exercises.search}
-            onChange={(event) => exercises.setSearch(event.target.value)}
+            onChange={(event) => { setEditing(undefined); exercises.setSearch(event.target.value); }}
             placeholder="Nome esercizio"
           />
         </label>
@@ -57,10 +59,23 @@ export function ExerciseLibraryPreview() {
             <summary><strong>{group.name}</strong><span>{group.items.length} esercizi</span></summary>
             <div className="exercise-group-items">
               {group.items.map((exercise) => (
-                <article key={exercise.id} className="exercise-row">
-                  <div><strong>{exercise.name}</strong>{exercise.description && <p>{exercise.description}</p>}</div>
-                  <Button variant="ghost" onClick={() => void exercises.deleteExercise(exercise.id)} aria-label={`Elimina ${exercise.name}`}>Elimina</Button>
-                </article>
+                <Fragment key={exercise.id}>
+                  <article className="exercise-row">
+                    <div><strong>{exercise.name}</strong>{exercise.description && <p>{exercise.description}</p>}</div>
+                    <div className="row-actions">
+                      {exercise.isCustom && <Button variant="ghost" onClick={() => setEditing(exercise)} aria-label={`Modifica ${exercise.name}`}>Modifica</Button>}
+                      <Button variant="ghost" onClick={() => void exercises.deleteExercise(exercise.id)} aria-label={`Elimina ${exercise.name}`}>Elimina</Button>
+                    </div>
+                  </article>
+                  {editing?.id === exercise.id && <CustomExerciseForm key={exercise.id} exercise={exercise}
+                    onCancel={() => setEditing(undefined)}
+                    onSaved={(muscleGroup) => {
+                      setEditing(undefined);
+                      exercises.setSearch('');
+                      exercises.setSelectedMuscleGroup(muscleGroup);
+                      void exercises.reload();
+                    }} />}
+                </Fragment>
               ))}
             </div>
           </details>
@@ -68,13 +83,13 @@ export function ExerciseLibraryPreview() {
       </div>
 
       <div className="inline-divider" />
-      <CustomExerciseForm
+      {!editing && <CustomExerciseForm
         onSaved={(muscleGroup) => {
           exercises.setSearch('');
           exercises.setSelectedMuscleGroup(muscleGroup);
           void exercises.reload();
         }}
-      />
+      />}
       <div className="inline-divider" />
       <CatalogOptionsManager />
     </section>
