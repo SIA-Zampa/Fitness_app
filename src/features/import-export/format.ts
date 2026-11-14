@@ -5,6 +5,7 @@ export type WorkoutPlanExportFile = {
   planId: string;
   planVersion: number;
   planName: string;
+  planSex?: 'F' | 'M' | '';
   clientDisplayName?: string;
   exportedAt: string;
   days: Array<{

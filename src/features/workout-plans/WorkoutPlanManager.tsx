@@ -1,6 +1,5 @@
 import { Button } from '../../components/Button/Button';
 import { useWorkoutPlans } from '../../hooks/useWorkoutPlans';
-import { goals, levels } from '../../models/workoutOptions';
 
 export function WorkoutPlanManager() {
   const plans = useWorkoutPlans();
@@ -16,46 +15,23 @@ export function WorkoutPlanManager() {
       </div>
 
       <div className="form-grid">
-        <label><span>Obiettivo</span><select value={plans.goal} onChange={(event) => plans.setGoal(event.target.value)}><option value="">Seleziona</option>{goals.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label><span>Livello</span><select value={plans.level} onChange={(event) => plans.setLevel(event.target.value)}><option value="">Seleziona</option>{levels.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label><span>Settimane</span><input type="number" min="1" value={plans.weeks} onChange={(event) => plans.setWeeks(Number(event.target.value))} /></label>
-        <label><span>Trainer</span><input value={plans.trainer} onChange={(event) => plans.setTrainer(event.target.value)} /></label>
-        <label><span>Scala sforzo</span><select value={plans.effortScale} onChange={(event) => plans.setEffortScale(event.target.value as 'RIR' | 'RPE')}><option>RIR</option><option>RPE</option></select></label>
-        {!plans.clientId && <label><span>Sesso</span><select value={plans.sex} onChange={(event) => plans.setSex(event.target.value as 'F' | 'M' | '')}><option value="">Non indicato</option><option value="F">Femminile</option><option value="M">Maschile</option></select></label>}
-      </div>
-
-      <div className="form-grid">
         <label>
-          <span>Nome scheda</span>
+          <span>Titolo scheda</span>
           <input
             value={plans.name}
             onChange={(event) => plans.setName(event.target.value)}
-            placeholder="Es. Ipertrofia Marco"
+            placeholder="Es. Ipertrofia base"
           />
         </label>
-
         <label>
-          <span>Cliente associato</span>
-          <select value={plans.clientId} onChange={(event) => plans.setClientId(event.target.value)}>
-            <option value="">Nessun cliente</option>
-            {plans.clients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.name}
-              </option>
-            ))}
+          <span>Scheda per</span>
+          <select value={plans.sex} onChange={(event) => plans.setSex(event.target.value as 'F' | 'M' | '')}>
+            <option value="">Seleziona</option>
+            <option value="M">Maschi</option>
+            <option value="F">Femmine</option>
           </select>
         </label>
       </div>
-
-      <label className="full-field">
-        <span>Descrizione</span>
-        <textarea
-          value={plans.description}
-          onChange={(event) => plans.setDescription(event.target.value)}
-          placeholder="Obiettivo, note generali o indicazioni per il cliente"
-          rows={3}
-        />
-      </label>
 
       <div className="day-builder">
         <div className="section-title-row compact">
@@ -94,9 +70,16 @@ export function WorkoutPlanManager() {
               <div>
                 <strong>{plan.name}</strong>
                 <p>
-                  {plan.clientName} · v{plan.version} · {plan.days.length} giorni
+                  {plan.days.length} giorni
                 </p>
                 <small>{plan.days.map((day) => day.name).join(', ')}</small>
+                <label className="plan-sex"><span>Scheda per</span><select value={plan.sex ?? ''}
+                  onChange={(event) => void plans.updateSex(plan.id, event.target.value as 'F' | 'M' | '')}
+                  aria-label={`Sesso della scheda ${plan.name}`}>
+                  <option value="">Non specificato</option>
+                  <option value="M">Maschi</option>
+                  <option value="F">Femmine</option>
+                </select></label>
               </div>
               <div className="row-actions">
                 <Button variant="ghost" onClick={() => void plans.duplicatePlan(plan.id)}>

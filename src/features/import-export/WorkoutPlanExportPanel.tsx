@@ -1,21 +1,26 @@
 import { useEffect, useState } from 'react';
 import { Button } from '../../components/Button/Button';
-import { db, type WorkoutPlan } from '../../database/db';
+import { db, type Client, type WorkoutPlan } from '../../database/db';
 import { downloadWorkoutPlanExcel } from '../../services/workoutPlanExcel';
 
 export function WorkoutPlanExportPanel() {
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
-  const [clientNames, setClientNames] = useState<Record<string, string>>({});
+  const [clients, setClients] = useState<Client[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState('');
+  const [selectedClientId, setSelectedClientId] = useState('');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadPlans() {
-      const [storedPlans, clients] = await Promise.all([db.workoutPlans.orderBy('updatedAt').reverse().toArray(), db.clients.toArray()]);
+      const [storedPlans, storedClients] = await Promise.all([
+        db.workoutPlans.orderBy('updatedAt').reverse().toArray(),
+        db.clients.orderBy('name').toArray(),
+      ]);
       setPlans(storedPlans);
-      setClientNames(Object.fromEntries(clients.map((client) => [client.id, client.name])));
+      setClients(storedClients);
       setSelectedPlanId((currentPlanId) => currentPlanId || storedPlans[0]?.id || '');
+      setSelectedClientId(storedPlans[0]?.clientId ?? '');
     }
 
     void loadPlans();
@@ -28,15 +33,16 @@ export function WorkoutPlanExportPanel() {
     }
 
     try {
-      await downloadWorkoutPlanExcel(planId);
+      await downloadWorkoutPlanExcel(planId,
+        clients.some((client) => client.id === selectedClientId) ? selectedClientId : undefined);
       setStatus('File esportato.');
     } catch (error) {
       console.error('Unable to export workout plan', error);
-      setStatus('Non sono riuscito a esportare la scheda.');
+      setStatus(error instanceof Error ? error.message : 'Non sono riuscito a esportare la scheda.');
     }
   }
 
-  const filteredPlans = plans.filter((plan) => `${plan.name} ${clientNames[plan.clientId ?? ''] ?? ''}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+  const filteredPlans = plans.filter((plan) => plan.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
   const visiblePlanId = filteredPlans.some((plan) => plan.id === selectedPlanId) ? selectedPlanId : filteredPlans[0]?.id ?? '';
 
   return (
@@ -55,16 +61,30 @@ export function WorkoutPlanExportPanel() {
         <>
           <label className="full-field">
             <span>Cerca scheda</span>
-            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nome scheda o cliente" />
+            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Titolo scheda" />
           </label>
           <label className="full-field">
             <span>Scheda</span>
-            <select value={visiblePlanId} onChange={(event) => setSelectedPlanId(event.target.value)} disabled={filteredPlans.length === 0}>
+            <select value={visiblePlanId} onChange={(event) => {
+              const planId = event.target.value;
+              setSelectedPlanId(planId);
+              setSelectedClientId(plans.find((plan) => plan.id === planId)?.clientId ?? '');
+            }} disabled={filteredPlans.length === 0}>
               {filteredPlans.map((plan) => (
                 <option key={plan.id} value={plan.id}>
-                  {plan.name} v{plan.version}
+                  {plan.name}
                 </option>
               ))}
+            </select>
+          </label>
+          <label className="full-field">
+            <span>Cliente da riportare nell’Excel (facoltativo)</span>
+            <select value={clients.some((client) => client.id === selectedClientId) ? selectedClientId : ''}
+              onChange={(event) => setSelectedClientId(event.target.value)}>
+              <option value="">Nessun cliente: lascia i campi vuoti</option>
+              {clients.map((client) => <option key={client.id} value={client.id}>
+                {client.name}{client.archived ? ' (archiviato)' : ''}
+              </option>)}
             </select>
           </label>
           {filteredPlans.length === 0 && <p className="empty-copy">Nessuna scheda corrisponde alla ricerca.</p>}

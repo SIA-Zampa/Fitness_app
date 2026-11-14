@@ -8,25 +8,55 @@ export type Client = {
   birthDate?: string;
   age?: number;
   weightKg?: number;
+  weightHistory?: ClientWeightEntry[];
   measurementsCm?: Partial<Record<ClientMeasurement, number>>;
   measurementsByWeek?: WeeklyClientMeasurements[];
   measurementsByMonth?: MonthlyClientMeasurements[];
   level?: string;
   criticalities?: string;
   notes?: string;
+  goals?: string;
+  sleepHours?: number;
+  pathologies?: string;
+  lifestyle?: string;
+  trainingDays?: number[];
+  monthlyStrength?: MonthlyStrengthProgress[];
+  weeklyProgressions?: WeeklyExerciseProgression[];
   archived: boolean;
   createdAt: string;
 };
 
-export type ClientMeasurement = 'shoulders' | 'chest' | 'arm' | 'forearm' | 'waist' | 'hips' | 'thigh' | 'calf';
+export type ClientMeasurement = 'height' | 'shoulders' | 'chest' | 'arm' | 'forearm' | 'waist' | 'hips' | 'thigh' | 'calf';
+
+export type ClientWeightEntry = { date: string; weightKg: number };
+
+export type MonthlyStrengthProgress = {
+  exerciseId: string;
+  month: string;
+  weightKg: number;
+  repetitions: number;
+  notes?: string;
+};
+
+export type WeeklyExerciseProgression = {
+  workoutExerciseId: string;
+  week: number;
+  repetitions?: number;
+  loadPercent?: number;
+  weightKg?: number;
+  notes?: string;
+};
 
 export type WeeklyClientMeasurements = {
   week: number;
+  date?: string;
   measurementsCm: Partial<Record<ClientMeasurement, number>>;
 };
 
 export type MonthlyClientMeasurements = {
   month: number;
+  calendarMonth?: string;
+  weightKg?: number;
   measurementsCm: Partial<Record<ClientMeasurement, number>>;
 };
 
@@ -35,6 +65,7 @@ export type Exercise = {
   name: string;
   muscleGroup: string;
   description?: string;
+  videoUrl?: string;
   isCustom: boolean;
   archived?: boolean;
   createdAt: string;
@@ -49,6 +80,7 @@ export type WorkoutPlan = {
   goal?: string;
   level?: string;
   weeks?: number;
+  startDate?: string;
   trainer?: string;
   sex?: 'F' | 'M' | '';
   effortScale?: 'RIR' | 'RPE';
@@ -82,6 +114,7 @@ export type WorkoutExercise = {
   intensityTechnique?: string;
   progression?: string;
   increment?: string;
+  weeklyInstructions?: string[];
   order: number;
 };
 

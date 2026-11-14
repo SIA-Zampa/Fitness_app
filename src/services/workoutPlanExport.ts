@@ -15,8 +15,7 @@ export async function buildWorkoutPlanExport(planId: string): Promise<WorkoutPla
     throw new Error('Scheda non trovata.');
   }
 
-  const [client, days, assignments, exercises] = await Promise.all([
-    plan.clientId ? db.clients.get(plan.clientId) : undefined,
+  const [days, assignments, exercises] = await Promise.all([
     db.workoutDays.where('planId').equals(planId).sortBy('order'),
     db.workoutExercises.toArray(),
     db.exercises.toArray(),
@@ -27,7 +26,8 @@ export async function buildWorkoutPlanExport(planId: string): Promise<WorkoutPla
 
   const exportDays = days.map((day) => {
     const dayAssignments = assignments
-      .filter((assignment) => assignment.workoutDayId === day.id)
+      .filter((assignment) => assignment.workoutDayId === day.id &&
+        (plan.sex === 'F' || assignment.section !== 'activation'))
       .sort((a, b) => a.order - b.order);
 
     return {
@@ -60,7 +60,7 @@ export async function buildWorkoutPlanExport(planId: string): Promise<WorkoutPla
     planId: plan.id,
     planVersion: plan.version,
     planName: plan.name,
-    clientDisplayName: client?.name,
+    planSex: plan.sex,
     exportedAt: new Date().toISOString(),
     days: exportDays,
     customExercises: exercises

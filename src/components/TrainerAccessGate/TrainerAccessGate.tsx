@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Button } from '../Button/Button';
 import { Card } from '../Card/Card';
 import { verifyPassword } from '../../services/password';
@@ -17,6 +17,7 @@ export function TrainerAccessGate({
   const [isBusy, setIsBusy] = useState(false);
 
   async function submitPassword() {
+    if (isBusy) return;
     if (!passwordHash) {
       setStatus('Password trainer non configurata.');
       return;
@@ -43,31 +44,36 @@ export function TrainerAccessGate({
     }
   }
 
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void submitPassword();
+  }
+
   return (
     <section className="access-gate">
-      <Card tone="accent">
-        <p className="eyebrow">Area riservata</p>
-        <h2>Accesso Personal Trainer</h2>
-        <p>
-          Inserisci la password fornita dal proprietario dell app per accedere all area Personal
-          Trainer.
-        </p>
+      <img className="access-logo" src="./images/brand-logo.png" alt="ADL Personal Trainer Coaching Online" />
+      <form onSubmit={handleSubmit}>
+        <Card tone="accent">
+          <p className="eyebrow">Area riservata</p>
+          <h2>Accesso Personal Trainer</h2>
+          <p>Inserisci la password per accedere all’area Personal Trainer.</p>
 
-        <label className="full-field">
-          <span>Password</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="current-password"
-          />
-        </label>
+          <label className="full-field">
+            <span>Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+            />
+          </label>
 
-        {status && <p className="form-status">{status}</p>}
-        <Button onClick={() => void submitPassword()} disabled={isBusy}>
-          {isBusy ? 'Attendere...' : 'Entra'}
-        </Button>
-      </Card>
+          {status && <p className="form-status">{status}</p>}
+          <Button type="submit" disabled={isBusy}>
+            {isBusy ? 'Attendere...' : 'Entra'}
+          </Button>
+        </Card>
+      </form>
     </section>
   );
 }

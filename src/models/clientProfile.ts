@@ -1,6 +1,7 @@
 import type { Client, ClientMeasurement, MonthlyClientMeasurements, WeeklyClientMeasurements } from '../database/db';
 
 export const clientMeasurements: ReadonlyArray<{ key: ClientMeasurement; label: string }> = [
+  { key: 'height', label: 'Altezza' },
   { key: 'shoulders', label: 'Spalle' },
   { key: 'chest', label: 'Torace' },
   { key: 'arm', label: 'Braccio' },
@@ -13,7 +14,8 @@ export const clientMeasurements: ReadonlyArray<{ key: ClientMeasurement; label: 
 
 export function monthlyMeasurements(client: Pick<Client, 'measurementsCm' | 'measurementsByWeek' | 'measurementsByMonth'>): MonthlyClientMeasurements[] {
   if (client.measurementsByMonth) {
-    return [...client.measurementsByMonth].sort((a, b) => a.month - b.month);
+    return [...client.measurementsByMonth].sort((a, b) =>
+      a.calendarMonth && b.calendarMonth ? a.calendarMonth.localeCompare(b.calendarMonth) : a.month - b.month);
   }
   const initial = !client.measurementsByWeek ? client.measurementsCm : undefined;
   return initial && Object.keys(initial).length > 0 ? [{ month: 1, measurementsCm: initial }] : [];
@@ -21,6 +23,13 @@ export function monthlyMeasurements(client: Pick<Client, 'measurementsCm' | 'mea
 
 export function historicalWeeklyMeasurements(client: Pick<Client, 'measurementsByWeek'>): WeeklyClientMeasurements[] {
   return [...(client.measurementsByWeek ?? [])].sort((a, b) => a.week - b.week);
+}
+
+export function monthlyWeight(client: Pick<Client, 'weightHistory'>, period: MonthlyClientMeasurements) {
+  if (period.weightKg !== undefined) return period.weightKg;
+  if (!period.calendarMonth) return undefined;
+  return [...(client.weightHistory ?? [])].filter((entry) => entry.date.startsWith(period.calendarMonth!))
+    .sort((a, b) => a.date.localeCompare(b.date)).at(-1)?.weightKg;
 }
 
 export function measurementChange(periods: Array<{ measurementsCm: Partial<Record<ClientMeasurement, number>> }>, key: ClientMeasurement) {

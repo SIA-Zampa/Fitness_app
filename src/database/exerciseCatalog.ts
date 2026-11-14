@@ -26,6 +26,21 @@ const catalog: Record<string, string[]> = {
 
 export const expandedMuscleGroups = Object.keys(catalog);
 export const mobilityGroups = expandedMuscleGroups.filter((group) => group.startsWith('Mobilita '));
+export const activationGroups = ['Attivazione glutei', 'Propriocezione ed equilibrio'];
+
+export const exerciseMacrosections = [
+  { id: 'main', label: 'Esercizi principali' },
+  { id: 'mobility', label: 'Mobilità articolare' },
+  { id: 'activation', label: 'Attivazione e propriocezione' },
+] as const;
+
+export type ExerciseMacrosection = (typeof exerciseMacrosections)[number]['id'];
+
+export function exerciseMacrosectionForGroup(group: string): ExerciseMacrosection {
+  if (mobilityGroups.includes(group)) return 'mobility';
+  if (activationGroups.includes(group)) return 'activation';
+  return 'main';
+}
 
 const timestamp = '2026-01-01T00:00:00.000Z';
 

@@ -1,87 +1,32 @@
-import { useEffect, useMemo, useState } from 'react';
-import { db, type Client, type WorkoutDay, type WorkoutPlan } from '../database/db';
+import { useEffect, useState } from 'react';
+import { db, type WorkoutDay, type WorkoutPlan } from '../database/db';
 import { createId } from '../services/id';
 
-type PlanWithClient = WorkoutPlan & {
-  clientName: string;
-  days: WorkoutDay[];
-};
+type PlanWithDays = WorkoutPlan & { days: WorkoutDay[] };
 
-type UseWorkoutPlansResult = {
-  plans: PlanWithClient[];
-  clients: Client[];
-  name: string;
-  description: string;
-  clientId: string;
-  dayNames: string[];
-  goal: string;
-  level: string;
-  weeks: number;
-  trainer: string;
-  sex: 'F' | 'M' | '';
-  effortScale: 'RIR' | 'RPE';
-  status: string | null;
-  setName: (name: string) => void;
-  setDescription: (description: string) => void;
-  setClientId: (clientId: string) => void;
-  setGoal: (value: string) => void;
-  setLevel: (value: string) => void;
-  setWeeks: (value: number) => void;
-  setTrainer: (value: string) => void;
-  setSex: (value: 'F' | 'M' | '') => void;
-  setEffortScale: (value: 'RIR' | 'RPE') => void;
-  setDayName: (index: number, name: string) => void;
-  addDay: () => void;
-  removeDay: (index: number) => void;
-  createPlan: () => Promise<void>;
-  duplicatePlan: (planId: string) => Promise<void>;
-  deletePlan: (planId: string) => Promise<void>;
-};
-
-export function useWorkoutPlans(): UseWorkoutPlansResult {
-  const [plans, setPlans] = useState<PlanWithClient[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
+export function useWorkoutPlans() {
+  const [plans, setPlans] = useState<PlanWithDays[]>([]);
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [clientId, setClientId] = useState('');
-  const [dayNames, setDayNames] = useState(['Giorno 1']);
-  const [goal, setGoal] = useState('');
-  const [level, setLevel] = useState('');
-  const [weeks, setWeeks] = useState(8);
-  const [trainer, setTrainer] = useState('');
   const [sex, setSex] = useState<'F' | 'M' | ''>('');
-  const [effortScale, setEffortScale] = useState<'RIR' | 'RPE'>('RIR');
+  const [dayNames, setDayNames] = useState(['Giorno 1']);
   const [status, setStatus] = useState<string | null>(null);
 
-  const clientNameById = useMemo(() => {
-    return new Map(clients.map((client) => [client.id, client.name]));
-  }, [clients]);
-
   async function loadData() {
-    const [storedClients, storedPlans, storedDays] = await Promise.all([
-      db.clients.filter((client) => !client.archived).toArray(),
+    const [storedPlans, storedDays] = await Promise.all([
       db.workoutPlans.orderBy('updatedAt').reverse().toArray(),
       db.workoutDays.orderBy('order').toArray(),
     ]);
-
-    setClients(storedClients);
-    setPlans(
-      storedPlans.map((plan) => ({
-        ...plan,
-        clientName: plan.clientId ? clientNameById.get(plan.clientId) ?? 'Cliente non trovato' : 'Nessun cliente',
-        days: storedDays.filter((day) => day.planId === plan.id),
-      })),
-    );
+    setPlans(storedPlans.map((plan) => ({
+      ...plan,
+      days: storedDays.filter((day) => day.planId === plan.id),
+    })));
   }
 
-  useEffect(() => {
-    void loadData();
-  }, [clientNameById]);
+  useEffect(() => { void loadData(); }, []);
 
   function setDayName(index: number, value: string) {
-    setDayNames((currentDays) =>
-      currentDays.map((dayName, currentIndex) => (currentIndex === index ? value : dayName)),
-    );
+    setDayNames((currentDays) => currentDays.map((dayName, currentIndex) =>
+      currentIndex === index ? value : dayName));
   }
 
   function addDay() {
@@ -89,19 +34,20 @@ export function useWorkoutPlans(): UseWorkoutPlansResult {
   }
 
   function removeDay(index: number) {
-    setDayNames((currentDays) => {
-      if (currentDays.length === 1) return currentDays;
-      return currentDays.filter((_, currentIndex) => currentIndex !== index);
-    });
+    setDayNames((currentDays) => currentDays.length === 1
+      ? currentDays : currentDays.filter((_, currentIndex) => currentIndex !== index));
   }
 
   async function createPlan() {
     const normalizedName = name.trim();
     if (!normalizedName) {
-      setStatus('Inserisci il nome della scheda.');
+      setStatus('Inserisci il titolo della scheda.');
       return;
     }
-
+    if (!sex) {
+      setStatus('Seleziona se la scheda è maschile o femminile.');
+      return;
+    }
     const normalizedDays = dayNames.map((dayName) => dayName.trim()).filter(Boolean);
     if (normalizedDays.length === 0) {
       setStatus('Inserisci almeno un giorno di allenamento.');
@@ -110,41 +56,17 @@ export function useWorkoutPlans(): UseWorkoutPlansResult {
 
     const now = new Date().toISOString();
     const planId = createId('plan');
-
     await db.transaction('rw', db.workoutPlans, db.workoutDays, async () => {
       await db.workoutPlans.add({
-        id: planId,
-        clientId: clientId || undefined,
-        name: normalizedName,
-        description: description.trim() || undefined,
-        goal: goal.trim() || undefined,
-        level: level.trim() || undefined,
-        weeks,
-        trainer: trainer.trim() || undefined,
-        sex: clients.find((client) => client.id === clientId)?.sex || sex,
-        effortScale,
-        version: 1,
-        createdAt: now,
-        updatedAt: now,
+        id: planId, name: normalizedName, sex, version: 1, createdAt: now, updatedAt: now,
       });
-
-      await db.workoutDays.bulkAdd(
-        normalizedDays.map((dayName, index) => ({
-          id: createId('day'),
-          planId,
-          name: dayName,
-          order: index + 1,
-        })),
-      );
+      await db.workoutDays.bulkAdd(normalizedDays.map((dayName, index) => ({
+        id: createId('day'), planId, name: dayName, order: index + 1,
+      })));
     });
-
     setName('');
-    setDescription('');
-    setClientId('');
+    setSex('');
     setDayNames(['Giorno 1']);
-    setGoal('');
-    setLevel('');
-    setTrainer('');
     setStatus('Scheda salvata.');
     await loadData();
   }
@@ -152,70 +74,64 @@ export function useWorkoutPlans(): UseWorkoutPlansResult {
   async function duplicatePlan(planId: string) {
     const plan = await db.workoutPlans.get(planId);
     if (!plan) return;
-
     const days = await db.workoutDays.where('planId').equals(planId).sortBy('order');
+    const assignments = days.length > 0
+      ? await db.workoutExercises.where('workoutDayId').anyOf(days.map((day) => day.id)).toArray()
+      : [];
+    const visibleAssignments = assignments.filter((assignment) =>
+      plan.sex === 'F' || assignment.section !== 'activation');
     const now = new Date().toISOString();
     const nextPlanId = createId('plan');
-
-    await db.transaction('rw', db.workoutPlans, db.workoutDays, async () => {
+    const nextDayIds = new Map(days.map((day) => [day.id, createId('day')]));
+    await db.transaction('rw', db.workoutPlans, db.workoutDays, db.workoutExercises, async () => {
+      // A copy is standalone even when the original is a legacy client plan.
       await db.workoutPlans.add({
-        ...plan,
-        id: nextPlanId,
-        name: `${plan.name} copia`,
-        version: 1,
-        createdAt: now,
-        updatedAt: now,
+        id: nextPlanId, name: `${plan.name} copia`, sex: plan.sex, version: 1, createdAt: now, updatedAt: now,
       });
-
-      await db.workoutDays.bulkAdd(
-        days.map((day) => ({
-          ...day,
-          id: createId('day'),
-          planId: nextPlanId,
-        })),
-      );
+      await db.workoutDays.bulkAdd(days.map((day) => ({
+        ...day, id: nextDayIds.get(day.id)!, planId: nextPlanId,
+      })));
+      if (visibleAssignments.length > 0) {
+        await db.workoutExercises.bulkAdd(visibleAssignments.map((assignment) => ({
+          ...assignment,
+          id: createId('assignment'),
+          workoutDayId: nextDayIds.get(assignment.workoutDayId)!,
+        })));
+      }
     });
-
     setStatus('Scheda duplicata.');
     await loadData();
   }
 
-  async function deletePlan(planId: string) {
-    const confirmed = window.confirm('Eliminare definitivamente questa scheda?');
-    if (!confirmed) return;
+  async function updateSex(planId: string, value: 'F' | 'M' | '') {
+    const plan = await db.workoutPlans.get(planId);
+    if (!plan || (plan.sex ?? '') === value) return;
+    await db.workoutPlans.update(planId, {
+      sex: value,
+      version: plan.version + 1,
+      updatedAt: new Date().toISOString(),
+    });
+    setStatus('Tipo di scheda aggiornato.');
+    await loadData();
+  }
 
+  async function deletePlan(planId: string) {
+    if (!window.confirm('Eliminare definitivamente questa scheda?')) return;
     await db.transaction('rw', db.workoutPlans, db.workoutDays, db.workoutExercises, async () => {
       const days = await db.workoutDays.where('planId').equals(planId).toArray();
-      await db.workoutExercises
-        .where('workoutDayId')
-        .anyOf(days.map((day) => day.id))
-        .delete();
+      if (days.length > 0) {
+        await db.workoutExercises.where('workoutDayId').anyOf(days.map((day) => day.id)).delete();
+      }
       await db.workoutDays.where('planId').equals(planId).delete();
       await db.workoutPlans.delete(planId);
     });
-
     setStatus('Scheda eliminata.');
     await loadData();
   }
 
   return {
-    plans,
-    clients,
-    name,
-    description,
-    clientId,
-    dayNames,
-    goal, level, weeks, trainer, sex, effortScale,
-    status,
-    setName,
-    setDescription,
-    setClientId,
-    setGoal, setLevel, setWeeks, setTrainer, setSex, setEffortScale,
-    setDayName,
-    addDay,
-    removeDay,
-    createPlan,
-    duplicatePlan,
-    deletePlan,
+    plans, name, sex, dayNames, status,
+    setName, setSex, setDayName, addDay, removeDay,
+    createPlan, duplicatePlan, updateSex, deletePlan,
   };
 }

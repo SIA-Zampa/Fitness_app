@@ -12,5 +12,6 @@ export const intensityTechniques = [
 ];
 
 export const progressionTypes = ['Peso', 'Ripetizioni', 'Serie', 'Nessuna'];
+export const progressWeekCount = 8;
 export const goals = ['Dimagrimento', 'Ipertrofia', 'Forza', 'Ricomposizione', 'Posturale', 'Benessere generale', 'Performance'];
 export const levels = ['Principiante', 'Intermedio', 'Avanzato'];

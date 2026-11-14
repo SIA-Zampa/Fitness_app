@@ -11,6 +11,7 @@ function isValidWorkoutPlanExport(value: unknown): value is WorkoutPlanExportFil
   if (typeof value.planId !== 'string') return false;
   if (typeof value.planVersion !== 'number') return false;
   if (typeof value.planName !== 'string') return false;
+  if (value.planSex !== undefined && value.planSex !== 'F' && value.planSex !== 'M' && value.planSex !== '') return false;
   if (!Array.isArray(value.days)) return false;
   if (!Array.isArray(value.customExercises)) return false;
 
@@ -84,9 +85,7 @@ export async function importWorkoutPlan(exportedPlan: WorkoutPlanExportFile) {
     await db.workoutPlans.put({
       id: exportedPlan.planId,
       name: exportedPlan.planName,
-      description: exportedPlan.clientDisplayName
-        ? `Scheda importata per ${exportedPlan.clientDisplayName}`
-        : 'Scheda importata',
+      sex: exportedPlan.planSex ?? existingPlan?.sex,
       version: exportedPlan.planVersion,
       createdAt: existingPlan?.createdAt ?? now,
       updatedAt: now,

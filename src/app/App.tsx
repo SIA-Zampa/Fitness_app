@@ -10,10 +10,38 @@ import { SettingsHome } from '../pages/Settings/SettingsHome';
 import { TrainerHome } from '../pages/Trainer/TrainerHome';
 
 type AppView = 'home' | 'settings';
+const accessKey = 'fitness-app-trainer-access';
+
+function hasTrainerAccess() {
+  try {
+    return Boolean(configuredTrainerPasswordHash) && sessionStorage.getItem(accessKey) === configuredTrainerPasswordHash;
+  } catch {
+    return false;
+  }
+}
 
 export function App() {
   const [view, setView] = useState<AppView>('home');
-  const [isTrainerUnlocked, setIsTrainerUnlocked] = useState(false);
+  const [isTrainerUnlocked, setIsTrainerUnlocked] = useState(hasTrainerAccess);
+
+  function unlockTrainer() {
+    try {
+      sessionStorage.setItem(accessKey, configuredTrainerPasswordHash);
+    } catch {
+      // Access remains available until this page is closed if storage is unavailable.
+    }
+    setIsTrainerUnlocked(true);
+  }
+
+  function logoutTrainer() {
+    try {
+      sessionStorage.removeItem(accessKey);
+    } catch {
+      // The in-memory session is cleared even when browser storage is unavailable.
+    }
+    setView('home');
+    setIsTrainerUnlocked(false);
+  }
   const appSettings = useAppSettings();
   const theme = useTheme(appSettings.settings.theme, appSettings.setTheme);
 
@@ -22,10 +50,11 @@ export function App() {
       <AppShell
         title="Accesso Personal Trainer"
         actions={<ThemeSelector theme={theme} />}
+        accessLayout
       >
         <TrainerAccessGate
           passwordHash={configuredTrainerPasswordHash}
-          onUnlocked={() => setIsTrainerUnlocked(true)}
+          onUnlocked={unlockTrainer}
         />
       </AppShell>
     );
@@ -40,6 +69,7 @@ export function App() {
           <Button variant="ghost" onClick={() => setView(view === 'settings' ? 'home' : 'settings')}>
             {view === 'settings' ? 'Dashboard' : 'Impostazioni'}
           </Button>
+          <Button variant="ghost" onClick={logoutTrainer}>Esci</Button>
         </>
       }
     >

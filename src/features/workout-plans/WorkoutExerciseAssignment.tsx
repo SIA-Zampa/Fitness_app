@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Button } from '../../components/Button/Button';
 import { useWorkoutExerciseAssignments } from '../../hooks/useWorkoutExerciseAssignments';
-import { intensityTechniques, movementTypes, progressionTypes } from '../../models/workoutOptions';
+import { intensityTechniques, movementTypes, progressionTypes, progressWeekCount } from '../../models/workoutOptions';
 
 export function WorkoutExerciseAssignment() {
   const assignments = useWorkoutExerciseAssignments();
@@ -31,7 +31,7 @@ export function WorkoutExerciseAssignment() {
               >
                 {assignments.plans.map((plan) => (
                   <option key={plan.id} value={plan.id}>
-                    {plan.name}
+                    {plan.name}{plan.sex === 'M' ? ' · maschi' : plan.sex === 'F' ? ' · femmine' : ''}
                   </option>
                 ))}
               </select>
@@ -149,6 +149,19 @@ export function WorkoutExerciseAssignment() {
             />
           </label>
 
+          <section className="weekly-instructions" aria-label="Progressioni dei periodi">
+            <h3>Progressioni per periodo</h3>
+            <p>Scrivi le indicazioni da mostrare accanto all’esercizio nelle otto colonne del foglio Excel.</p>
+            <div className="weekly-instructions-grid">
+              {Array.from({ length: progressWeekCount }, (_, index) => <label key={index}>
+                <span>Progressione {index + 1}</span>
+                <textarea rows={2} value={assignments.weeklyInstructions[index] ?? ''}
+                  onChange={(event) => assignments.setWeeklyInstruction(index, event.target.value)}
+                  placeholder="Es. 3×8 al 70%, aumenta il carico se completi tutte le ripetizioni" />
+              </label>)}
+            </div>
+          </section>
+
           {assignments.status && <p className="form-status">{assignments.status}</p>}
           <div className="row-actions">
             <Button onClick={() => void assignments.addExercise()}>
@@ -172,6 +185,11 @@ export function WorkoutExerciseAssignment() {
                       {assignment.restSeconds}s recupero
                     </p>
                     {assignment.notes && <small>{assignment.notes}</small>}
+                    {assignment.weeklyInstructions?.some((value) => value.trim()) && <div className="assignment-instructions">
+                      {assignment.weeklyInstructions.map((value, index) => value.trim() ? <p key={index}>
+                        <strong>Progressione {index + 1}:</strong> {value}
+                      </p> : null)}
+                    </div>}
                   </div>
                   <div className="row-actions">
                     <Button variant="ghost" onClick={() => {

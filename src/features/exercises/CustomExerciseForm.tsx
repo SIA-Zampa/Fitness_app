@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '../../components/Button/Button';
 import { db, type Exercise } from '../../database/db';
 import { createId } from '../../services/id';
-import { expandedMuscleGroups } from '../../database/exerciseCatalog';
+import { expandedMuscleGroups, exerciseMacrosectionForGroup, exerciseMacrosections } from '../../database/exerciseCatalog';
 
 const muscleGroups = expandedMuscleGroups;
 
@@ -16,6 +16,7 @@ export function CustomExerciseForm({ exercise, onSaved, onCancel }: CustomExerci
   const [name, setName] = useState(exercise?.name ?? '');
   const [muscleGroup, setMuscleGroup] = useState(exercise?.muscleGroup ?? muscleGroups[0]);
   const [description, setDescription] = useState(exercise?.description ?? '');
+  const [videoUrl, setVideoUrl] = useState(exercise?.videoUrl ?? '');
   const availableGroups = muscleGroups.includes(muscleGroup) ? muscleGroups : [muscleGroup, ...muscleGroups];
   const [status, setStatus] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -25,6 +26,15 @@ export function CustomExerciseForm({ exercise, onSaved, onCancel }: CustomExerci
     if (!normalizedName) {
       setStatus('Inserisci il nome dell esercizio.');
       return;
+    }
+    if (videoUrl.trim()) {
+      try {
+        const url = new URL(videoUrl.trim());
+        if (!['https:', 'http:'].includes(url.protocol)) throw new Error('protocollo');
+      } catch {
+        setStatus('Inserisci un link video http o https valido.');
+        return;
+      }
     }
 
     setIsSaving(true);
@@ -37,6 +47,7 @@ export function CustomExerciseForm({ exercise, onSaved, onCancel }: CustomExerci
           name: normalizedName,
           muscleGroup,
           description: description.trim() || undefined,
+          videoUrl: videoUrl.trim() || undefined,
           updatedAt: now,
         });
         if (!updated) throw new Error('Esercizio non trovato.');
@@ -46,6 +57,7 @@ export function CustomExerciseForm({ exercise, onSaved, onCancel }: CustomExerci
           name: normalizedName,
           muscleGroup,
           description: description.trim() || undefined,
+          videoUrl: videoUrl.trim() || undefined,
           isCustom: true,
           createdAt: now,
           updatedAt: now,
@@ -54,6 +66,7 @@ export function CustomExerciseForm({ exercise, onSaved, onCancel }: CustomExerci
 
       setName('');
       setDescription('');
+      setVideoUrl('');
       setStatus(exercise ? 'Esercizio modificato.' : 'Esercizio salvato.');
       onSaved(muscleGroup);
     } catch (error) {
@@ -78,13 +91,12 @@ export function CustomExerciseForm({ exercise, onSaved, onCancel }: CustomExerci
         </label>
 
         <label>
-          <span>Gruppo muscolare</span>
+          <span>Gruppo / area</span>
           <select value={muscleGroup} onChange={(event) => setMuscleGroup(event.target.value)}>
-            {availableGroups.map((group) => (
-              <option key={group} value={group}>
-                {group}
-              </option>
-            ))}
+            {exerciseMacrosections.map((macrosection) => <optgroup key={macrosection.id} label={macrosection.label}>
+              {availableGroups.filter((group) => exerciseMacrosectionForGroup(group) === macrosection.id)
+                .map((group) => <option key={group} value={group}>{group}</option>)}
+            </optgroup>)}
           </select>
         </label>
       </div>
@@ -97,6 +109,11 @@ export function CustomExerciseForm({ exercise, onSaved, onCancel }: CustomExerci
           placeholder="Indicazioni tecniche o varianti"
           rows={3}
         />
+      </label>
+
+      <label className="full-field">
+        <span>Link video esecuzione</span>
+        <input type="url" value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://..." />
       </label>
 
       {status && <p className="form-status">{status}</p>}

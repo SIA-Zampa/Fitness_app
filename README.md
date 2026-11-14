@@ -21,16 +21,18 @@ Sono predisposti:
 - Creazione clienti essenziali con ID univoco.
 - Archiviazione ed eliminazione clienti con conferma.
 - Creazione esercizi personalizzati salvati in IndexedDB.
-- Creazione schede con cliente associato e giorni configurabili.
+- Creazione schede indipendenti dai clienti, con titolo, destinazione maschile o femminile e giorni configurabili.
 - Archivio schede iniziale con duplicazione ed eliminazione.
 - Assegnazione esercizi ai giorni con serie, ripetizioni, recupero, note e ordine.
 - Area Personal Trainer organizzata in sezioni separate.
 - Filtro gruppo muscolare durante l'assegnazione esercizi alla scheda.
 - Esportazione scheda cliente in Excel `.xlsx`, con un solo foglio e tutti i giorni.
 - Campi per obiettivo, livello, settimane, trainer, sesso, RIR/RPE, focus e note del giorno.
-- Sezioni mobilita, allenamento principale e propriocezione glutei (solo per clienti femminili).
+- Sezioni mobilita, allenamento principale e propriocezione glutei (solo per schede femminili).
 - Campi esercizio per tipo movimento, carico, tecnica intensita, progressione e incremento.
-- Menu RIR/RPE, ricerca schede per nome o cliente nell'esportazione, libreria ampliata e cataloghi locali per movimenti e tecniche personalizzati.
+- Menu RIR/RPE, ricerca schede per titolo nell'esportazione, libreria ampliata e cataloghi locali per movimenti e tecniche personalizzati.
+- Esportazione Excel con cliente selezionabile al momento del download, senza associare la scheda al cliente.
+- Backup e ripristino dei dati locali tramite file.
 - Le vecchie schede e sessioni salvate restano nel database locale, ma la modalita Cliente non e piu accessibile.
 
 ## Comandi
@@ -67,7 +69,7 @@ La PWA viene generata nella cartella `dist/` e pubblicata come sito statico HTTP
 
 ## Architettura
 
-Il progetto non usa backend, server applicativi, MySQL o database remoti. I dati saranno salvati localmente nel browser tramite IndexedDB.
+Il progetto non usa backend, server applicativi, MySQL o database remoti. I dati sono salvati localmente nel browser tramite IndexedDB.
 
 ## Prossima fase
 

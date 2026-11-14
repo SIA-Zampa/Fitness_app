@@ -5,7 +5,7 @@ import { ExerciseLibraryPreview } from '../../features/exercises/ExerciseLibrary
 import { WorkoutPlanExportPanel } from '../../features/import-export/WorkoutPlanExportPanel';
 import { WorkoutExerciseAssignment } from '../../features/workout-plans/WorkoutExerciseAssignment';
 import { WorkoutPlanManager } from '../../features/workout-plans/WorkoutPlanManager';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type TrainerSection = 'overview' | 'clients' | 'plans' | 'assignments' | 'exercises' | 'export';
 
@@ -23,21 +23,41 @@ const trainerSections: Array<{
 ];
 
 export function TrainerHome() {
-  const [activeSection, setActiveSection] = useState<TrainerSection>('overview');
+  function sectionFromHash(): TrainerSection {
+    const section = window.location.hash.replace(/^#\//, '').split('/')[0];
+    return trainerSections.some((item) => item.id === section) ? section as TrainerSection : 'overview';
+  }
+  const [activeSection, setActiveSection] = useState<TrainerSection>(sectionFromHash);
+  const [route, setRoute] = useState(window.location.hash);
+
+  useEffect(() => {
+    const syncSection = () => {
+      setActiveSection(sectionFromHash());
+      setRoute(window.location.hash);
+    };
+    window.addEventListener('hashchange', syncSection);
+    return () => window.removeEventListener('hashchange', syncSection);
+  }, []);
+
+  function selectSection(section: TrainerSection) {
+    window.location.hash = `#/${section}`;
+    setActiveSection(section);
+    setRoute(window.location.hash);
+  }
 
   return (
     <>
-      <section className="module-tabs" aria-label="Sezioni personal trainer">
+      {!route.startsWith('#/clients/') && <section className="module-tabs" aria-label="Sezioni personal trainer">
         {trainerSections.map((section) => (
           <Button
             key={section.id}
             variant={activeSection === section.id ? 'secondary' : 'ghost'}
-            onClick={() => setActiveSection(section.id)}
+            onClick={() => selectSection(section.id)}
           >
             {section.label}
           </Button>
         ))}
-      </section>
+      </section>}
 
       {activeSection === 'overview' && (
         <section className="dashboard-grid" aria-label="Dashboard personal trainer">
@@ -47,7 +67,7 @@ export function TrainerHome() {
               <Card key={section.id}>
                 <h2>{section.label}</h2>
                 <p>{section.description}</p>
-                <Button variant="secondary" onClick={() => setActiveSection(section.id)}>
+                <Button variant="secondary" onClick={() => selectSection(section.id)}>
                   Apri
                 </Button>
               </Card>
